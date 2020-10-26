@@ -51,33 +51,29 @@ nodeE :: ExceptT (String, Int) (State [Token]) (Maybe Tree)
 nodeE =
   do
     l <- nodeE'
-    r <- nodeO
-    return $ joinNode [l, r]
+    nodeO l
 
-nodeO :: ExceptT (String, Int) (State [Token]) (Maybe Tree)
-nodeO =
+nodeO :: Maybe Tree -> ExceptT (String, Int) (State [Token]) (Maybe Tree)
+nodeO left =
   do
     correctToken <- getToken predOrXorE
-    tokenA <- nodeA
-    tokenO <- nodeO
-    return $ joinNode [correctToken, tokenA, tokenO]
-    `catchError` (\_ -> return Nothing)
+    tokenE <- nodeE'
+    nodeO (joinNode [left, correctToken, tokenE])
+    `catchError` (\_ -> return left)
 
-nodeA :: ExceptT (String, Int) (State [Token]) (Maybe Tree)
-nodeA =
+nodeA :: Maybe Tree -> ExceptT (String, Int) (State [Token]) (Maybe Tree)
+nodeA left =
   do
     correctToken <- getToken (== And)
     tokenN <- nodeN
-    tokenA <- nodeA
-    return $ joinNode [correctToken, tokenN, tokenA]
-    `catchError` (\_ -> return Nothing)
+    nodeA (joinNode [left, correctToken, tokenN])
+    `catchError` (\_ -> return left)
 
 nodeE' :: ExceptT (String, Int) (State [Token]) (Maybe Tree)
 nodeE' =
   do
     tokenN <- nodeN
-    tokenA <- nodeA
-    return . joinNode $ [tokenN, tokenA]
+    nodeA tokenN
 
 nodeN :: ExceptT (String, Int) (State [Token]) (Maybe Tree)
 nodeN =
