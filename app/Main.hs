@@ -1,8 +1,6 @@
 module Main where
 
-import Control.Monad.Trans.State.Lazy
-import Token
-import Tree
+import Graph (evaluateGraph)
 
 main :: IO ()
-main = print (evaluateTree (lexicalAnalyzer "aandb"))
+main = evaluateGraph "(c and (not f) or x) or (t xor f and (r)) "

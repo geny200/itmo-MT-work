@@ -1,7 +1,5 @@
-{-# LANGUAGE BlockArguments #-}
-
 module Token
-  (
+  ( 
     Token (..)
   , lexicalAnalyzer
   )
@@ -9,8 +7,8 @@ where
 
 import Control.Applicative
 import Control.Monad.Trans.State.Lazy (StateT, get, put, runStateT)
-import Data.Char (isAlpha, isSpace)
-import Data.Maybe (fromMaybe)
+import Data.Char                      (isAlpha, isSpace)
+import Data.Maybe                     (fromMaybe)
 
 data Token
   = Var
@@ -50,24 +48,6 @@ binOp token str =
     _ <- string str
     return token
 
-testAnd :: StateT String Maybe Token
-testAnd = binOp And "and"
-
-testOr :: StateT String Maybe Token
-testOr = binOp Or "or"
-
-testXor :: StateT String Maybe Token
-testXor = binOp Xor "xor"
-
-testNot :: StateT String Maybe Token
-testNot = binOp Not "not"
-
-testBrOpen :: StateT String Maybe Token
-testBrOpen = binOp BrOpen "("
-
-testBrClose :: StateT String Maybe Token
-testBrClose = binOp BrClose ")"
-
 testVar :: StateT String Maybe Token
 testVar =
   do
@@ -77,21 +57,14 @@ testVar =
     return Var
 
 testAll :: StateT String Maybe Token
-testAll =
-  do
-    testAnd
-    <|> do
-      testNot
-    <|> do
-      testOr
-    <|> do
-      testXor
-    <|> do
-      testBrOpen
-    <|> do
-      testBrClose
-    <|> do
-      testVar
+testAll 
+  =     binOp And "and"
+    <|> binOp Not "not"
+    <|> binOp Or "or"
+    <|> binOp Xor "xor"
+    <|> binOp BrOpen "("
+    <|> binOp BrClose ")"
+    <|> testVar
 
 lexicalAnalyzer :: String -> [Token]
 lexicalAnalyzer str = fst (fromMaybe ([], []) (runStateT _lexicalAnalyzer (filter (not . isSpace) str)))
@@ -102,5 +75,4 @@ _lexicalAnalyzer =
     b <- testAll
     e <- _lexicalAnalyzer
     return (b : e)
-    <|> do
-      return []
+    <|> return []
