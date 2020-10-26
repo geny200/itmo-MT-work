@@ -1,9 +1,9 @@
 {-# LANGUAGE BlockArguments #-}
 
 module Token
-  ( 
-    Token (..),
-    lexicalAnalyzer,
+  (
+    Token (..)
+  , lexicalAnalyzer
   )
 where
 

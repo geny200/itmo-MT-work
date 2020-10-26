@@ -1,8 +1,8 @@
 module Tree
   ( 
-    Tree (..),
-    nodeE,
-    evaluateTree,
+    Tree (..)
+  , nodeE
+  , evaluateTree
   )
 where
 
@@ -22,7 +22,7 @@ evaluateTree tokens = toRevers tokens (evalState (runExceptT nodeE) tokens)
 data Tree
   = Leaf Token
   | Node [Tree]
-  deriving (Show)
+  deriving (Show, Eq)
 
 checkToken :: (Token -> Bool) -> [Token] -> Bool
 checkToken _ [] = True
@@ -79,8 +79,8 @@ nodeN :: ExceptT (String, Int) (State [Token]) (Maybe Tree)
 nodeN =
   do
     correctToken <- getToken (== Not)
-    tokenT <- nodeT
-    return $ joinNode [correctToken, tokenT]
+    tokenN <- nodeN
+    return $ joinNode [correctToken, tokenN]
     `catchError` const nodeT
 
 nodeT :: ExceptT (String, Int) (State [Token]) (Maybe Tree)

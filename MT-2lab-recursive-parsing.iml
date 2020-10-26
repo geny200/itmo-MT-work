@@ -46,9 +46,9 @@
     <orderEntry type="library" name="call-stack-0.2.0" level="project" />
     <orderEntry type="library" name="random-1.1" level="project" />
     <orderEntry type="library" name="splitmix-0.0.5" level="project" />
-    <orderEntry type="library" name="ghc-boot-th-8.8.3" level="project" />
     <orderEntry type="library" name="time-1.9.3" level="project" />
     <orderEntry type="library" name="Win32-2.6.1.0" level="project" />
     <orderEntry type="library" name="filepath-1.4.2.1" level="project" />
+    <orderEntry type="library" name="ghc-boot-th-8.8.4" level="project" />
   </component>
 </module>

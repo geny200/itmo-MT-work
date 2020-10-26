@@ -29,7 +29,7 @@ library:
   source-dirs: src
 
 executables:
-  MT-2Lab-exe:
+  MT-2lab-recursive-parsing-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -40,7 +40,7 @@ executables:
     - MT-2lab-recursive-parsing
 
 tests:
-  MT-2Lab-test:
+  MT-2lab-recursive-parsing-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
