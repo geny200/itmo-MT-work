@@ -1,0 +1,78 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 995a6c4c244b3876743c6192bccedc654e219ed1007a240bc8a9f3af1a850372
+
+name:           MT-2lab-recursive-parsing
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/Geny200/MT-2lab-recursive-parsing#readme>
+homepage:       https://github.com/Geny200/MT-2lab-recursive-parsing#readme
+bug-reports:    https://github.com/Geny200/MT-2lab-recursive-parsing/issues
+author:         Geny200
+maintainer:     -
+copyright:      2020 Geny200
+license:        GNUV3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/Geny200/MT-2lab-recursive-parsing
+
+library
+  exposed-modules:
+      Lib
+      Token
+      Tree
+  other-modules:
+      Paths_MT_2lab_recursive_parsing
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , free >=5 && <6
+    , mtl >=2.2.2
+    , transformers >=0.2 && <0.6
+  default-language: Haskell2010
+
+executable MT-2Lab-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_MT_2lab_recursive_parsing
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      MT-2lab-recursive-parsing
+    , base >=4.7 && <5
+    , free >=5 && <6
+    , mtl >=2.2.2
+    , transformers >=0.2 && <0.6
+  default-language: Haskell2010
+
+test-suite MT-2Lab-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Common
+      TestTree
+      Paths_MT_2lab_recursive_parsing
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HUnit
+    , MT-2lab-recursive-parsing
+    , QuickCheck
+    , base >=4.7 && <5
+    , free >=5 && <6
+    , mtl >=2.2.2
+    , split
+    , transformers >=0.2 && <0.6
+  default-language: Haskell2010
