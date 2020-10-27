@@ -18,7 +18,7 @@ data Tree
 
 evaluateTree 
   :: [Token] 
-  -> Either (String, Int) (Maybe Tree)
+  -> Either String (Maybe Tree)
 evaluateTree tokens = toRevers tokens (evalState (runExceptT startPrime) tokens)
 
 --------------------
@@ -28,9 +28,10 @@ evaluateTree tokens = toRevers tokens (evalState (runExceptT startPrime) tokens)
 toRevers 
   :: [Token] 
   -> Either (String, Int) (Maybe Tree) 
-  -> Either (String, Int) (Maybe Tree)
-toRevers tokens (Left (str, num)) = Left (str, length tokens - num)
-toRevers _ x = x
+  -> Either String (Maybe Tree)
+toRevers tokens (Left (str, num)) 
+  = Left (str ++ " at lextoken position " ++ show (length tokens - num))
+toRevers _ (Right x) = Right x
 
 joinNode :: [Maybe Tree] -> Maybe Tree
 joinNode list = return $ Node (catMaybes list)

@@ -14,18 +14,19 @@ import Tree                       (Tree (..), evaluateTree)
 evaluateGraph :: String -> IO ()
 evaluateGraph expr =
   do
-    createFileGraph (evaluateTree (lexicalAnalyzer expr))
+    let tree = lexicalAnalyzer expr >>= evaluateTree
+    createFileGraph tree
     callCommand "dot -Tjpg tree.gv -o tree.jpg"
     callCommand "tree.jpg"
 
-createFileGraph :: Either (String, Int) (Maybe Tree) -> IO ()
+createFileGraph :: Either String (Maybe Tree) -> IO ()
 createFileGraph (Right tree) =
   do
     let str = evalState (toGraph tree) 0
     writeFile "tree.gv" ("graph \"\" {\n" ++ str ++ "}\n")
-createFileGraph (Left (str, num)) =
+createFileGraph (Left str) =
   do
-    putStrLn (str ++ " at lextoken position " ++ show num)
+    putStrLn str
     fail "parse error"
 
 toGraph :: Maybe Tree -> State Integer String

@@ -1,5 +1,5 @@
 module Token
-  ( 
+  (
     Token (..)
   , lexicalAnalyzer
   )
@@ -8,7 +8,6 @@ where
 import Control.Applicative
 import Control.Monad.Trans.State.Lazy (StateT, get, put, runStateT)
 import Data.Char                      (isAlpha, isSpace)
-import Data.Maybe                     (fromMaybe)
 
 data Token
   = Var
@@ -57,7 +56,7 @@ testVar =
     return Var
 
 testAll :: StateT String Maybe Token
-testAll 
+testAll
   =     binOp And "and"
     <|> binOp Not "not"
     <|> binOp Or "or"
@@ -66,8 +65,13 @@ testAll
     <|> binOp BrClose ")"
     <|> testVar
 
-lexicalAnalyzer :: String -> [Token]
-lexicalAnalyzer str = fst (fromMaybe ([], []) (runStateT _lexicalAnalyzer (filter (not . isSpace) str)))
+lexicalAnalyzer :: String ->  Either String [Token]
+lexicalAnalyzer str = resultAnalyzer (runStateT _lexicalAnalyzer (filter (not . isSpace) str))
+
+resultAnalyzer :: Maybe ([Token], String) -> Either String [Token]
+resultAnalyzer (Just (tokens, [])) = Right tokens
+resultAnalyzer (Just (_, x : _))   = Left ("unexpected char " ++ [x])
+resultAnalyzer Nothing             = Left "lexical analyzer error"
 
 _lexicalAnalyzer :: StateT String Maybe [Token]
 _lexicalAnalyzer =
