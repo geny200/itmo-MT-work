@@ -1,7 +1,7 @@
 name:                MT-2lab-recursive-parsing
 version:             0.1.0.0
 github:              "Geny200/MT-2lab-recursive-parsing"
-license:             GNUV3
+license:             LGPL-3
 author:              "Geny200"
 maintainer:          "-"
 copyright:           "2020 Geny200"
@@ -25,6 +25,8 @@ dependencies:
 - free >= 5 && < 6
 - mtl >= 2.2.2
 - process >= 1.6.7
+- regex-tdfa
+- lens
 
 library:
   source-dirs: src

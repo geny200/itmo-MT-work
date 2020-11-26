@@ -1,3 +1,5 @@
+{-# LANGUAGE InstanceSigs #-}
+
 module Tree
   ( 
     Tree (..)
@@ -10,6 +12,7 @@ import Control.Monad.Except           (ExceptT, catchError, runExceptT, throwErr
 import Control.Monad.Trans.State.Lazy (State, evalState, get, put)
 import Data.Maybe                     (catMaybes)
 import Token                          (Token (..))
+import Control.Applicative (liftA2)
 
 data Tree
   = Leaf Token
@@ -119,8 +122,8 @@ nodeN :: ExceptT (String, Int) (State [Token]) (Maybe Tree)
 nodeN =
   do
     correctToken <- getToken (== Not)
-    tokenN <- nodeN
-    return $ joinNode [correctToken, tokenN]
+    tokenT <- nodeT
+    return $ joinNode [correctToken, tokenT]
     `catchError` const nodeT
 
 nodeT :: ExceptT (String, Int) (State [Token]) (Maybe Tree)
@@ -131,3 +134,36 @@ nodeT =
     correctTokenTwo <- getToken (== BrClose)
     return $ joinNode [correctTokenOne, tokenE, correctTokenTwo]
     `catchError` (\_ -> getToken (== Var))
+    
+data MM = 
+  MM String
+  | NN Int
+
+instance Semigroup MM where 
+  (<>) :: a -> b -> c 
+  (<>) = undefined
+  
+instance Monoid MM where 
+  mempty:: MM
+  mempty = undefined 
+
+newtype MyData a = MyData {run :: a -> a}
+
+instance Functor MyData where
+  fmap :: (a -> b) -> MyData a -> MyData b 
+  fmap = undefined
+  
+instance Foldable MyData where
+  foldMap :: (a -> m) -> MyData a -> m 
+  foldMap = undefined
+  
+instance Applicative MyData where 
+  (<*>) = liftA2 id
+  
+  pure :: a -> MyData a 
+  pure = undefined
+  
+instance Monad MyData where
+  (>>=) :: MyData a -> (a -> MyData b) -> MyData b 
+  (>>=) = undefined
+
