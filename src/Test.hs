@@ -1,15 +1,14 @@
-module Test                                                    
-  ( -- * lexer parser                                           
-    myLexer                                                           
-  )                                                             
-where                                                                
+-- | Before block                                               
+module Test
+  ( -- * Lexer parser
+    myLexer
+  )
+where
+                                                              
                                                                 
 import Control.Applicative ((<|>))                              
 import Parser.Combinator (eof, regExp)                          
 import Parser.Parser (Parser (..))                              
-                                                                
--- | Before block                                               
-                                                              
                                                                 
 -- | Token parsers                                              
 tokenParse1 :: Parser Char Token 

@@ -1,4 +1,11 @@
 
+{
+module Test
+  ( -- * Lexer parser
+    myLexer
+  )
+where
+}
 %%lexername { myLexer }
 %%tokentype { Token }
 %%tokens

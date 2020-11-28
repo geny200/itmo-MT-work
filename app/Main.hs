@@ -3,11 +3,9 @@ module Main where
 --import Graph (evaluateGraph)
 import Text.Regex.TDFA
 import Text.Printf (printf)
-import Lexer.Lexer
-import Lexer.Template
+import Lexer.Lexer (lexer)
 import Parser.Parser (runParser)
 import Data.Maybe (fromJust)
-import Control.Monad.State.Lazy (runState, evalState)
 import System.IO
 import Test
 
@@ -16,7 +14,7 @@ main =
   do 
     handle <- openFile "test.lex" ReadMode
     everything <- hGetContents handle
-    writeFile "src/Test.hs" (show . fst . fromJust $ runParser parseTmpLexer everything)
+    writeFile "src/Test.hs" (show . fst . fromJust $ runParser lexer everything)
     --print (fst . fromJust $ (runParser (parseTmpLexer) everything))
     hClose handle
 --print (fst . fromJust $ (runParser (evalState parseTmpToken (TMPLexer "" 0)) "  reg exp       {           }"))

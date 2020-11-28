@@ -2,7 +2,12 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Lexer.Template where
+module Lexer.Template
+  (
+    TMPCommonLexer(..),
+    TMPParserToken(..)
+  ) 
+where
 
 import Control.Lens
 import Text.Printf (printf)
@@ -49,18 +54,12 @@ instance Show TMPCommonLexer where
   show lexer =
     printf
       "\
-      \module Lexer                                                    \n\
-      \  ( -- * lexer parser                                           \n\
-      \    %s                                                          \n\
-      \  )                                                             \n\ 
-      \where                                                                \n\
+      \-- | Before block                                               \n\
+      \%s                                                              \n\
       \                                                                \n\
       \import Control.Applicative ((<|>))                              \n\
       \import Parser.Combinator (eof, regExp)                          \n\
       \import Parser.Parser (Parser (..))                              \n\
-      \                                                                \n\
-      \-- | Before block                                               \n\
-      \%s                                                              \n\
       \                                                                \n\
       \-- | Token parsers                                              \n\
       \%s                                                              \n\
@@ -75,7 +74,6 @@ instance Show TMPCommonLexer where
       \                                                                \n\
       \-- | After block                                                \n\
       \%s                                                              \n"
-      (lexer ^. lexerName)
       (lexer ^. doBefore)
       (concatMap (toTokenParser (lexer ^. tokenName)) (lexer ^. tmpParsers))
       (lexer ^. tokenName)

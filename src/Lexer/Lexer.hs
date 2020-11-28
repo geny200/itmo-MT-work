@@ -1,24 +1,24 @@
-module Lexer.Lexer where
+module Lexer.Lexer
+  (
+    lexer
+  )
+where
 
 import Control.Applicative ((<|>))
-import Control.Monad.State.Lazy (State, get, evalState, modify)
-import Data.Char (isSpace)
+import Control.Monad.State.Lazy (State, evalState, get, modify)
 import Lexer.Template (TMPCommonLexer (..), TMPParserToken (..))
-import Parser.Combinator
+import Parser.Combinator (parseFigureBr, satisfy, space, spaceStr, stream)
 import Parser.Parser (Parser (..))
 
 lexer :: Parser Char TMPCommonLexer
-lexer = undefined
-
-parseTmpLexer :: Parser Char TMPCommonLexer
-parseTmpLexer =
+lexer =
   TMPCommonLexer
     <$> (parseFigureBr <|> pure "")
     <*> ((space >> stream "%%lexername" >> parseFigureBr) <|> pure "lexer")
     <*> ((space >> stream "%%tokentype" >> parseFigureBr) <|> pure "a")
     <*> (space >> stream "%%tokens" >> evalState parseTmpTokens 0)
     <*> (parseFigureBr <|> pure "")
-    
+
 parseTmpTokens :: State Integer (Parser Char [TMPParserToken])
 parseTmpTokens =
   do
@@ -44,17 +44,3 @@ exprSkipLastWP :: Parser Char String
 exprSkipLastWP =
   (++) <$> ((++) <$> spaceStr <*> ((: []) <$> satisfy (\x -> x /= '{' && x /= '\n')))
     <*> (exprSkipLastWP <|> pure "")
-
-skipLastWP :: Parser Char a -> Parser Char a 
-skipLastWP = undefined
-
-skipFigureBr :: Parser Char a -> Parser Char a
-skipFigureBr pars = space >> satisfy (== '{') >> space >> pars >>= (\x -> space >> satisfy (== '}') >> return x)
-
-parseFigureBr :: Parser Char String
-parseFigureBr = skipFigureBr (allWhile (/= '}'))
-
--- | A parser that consumes any number
--- of whitespace characters.
-spaceStr :: Parser Char String
-spaceStr = ((:) <$> satisfy isSpace) <*> spaceStr <|> pure ""

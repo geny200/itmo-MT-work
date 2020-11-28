@@ -4,9 +4,11 @@ module Parser.Combinator
     element,
     eof,
     ok,
+    parseFigureBr,
     regExp,
     satisfy,
     space,
+    spaceStr,
     stream,
   )
 where
@@ -79,3 +81,14 @@ regExp strRegExp = Parser $ \input ->
   case input =~~ strRegExp :: Maybe (String, String, String) of
     Nothing -> Nothing
     Just (_, x, xs) -> Just (x, xs)
+
+skipFigureBr :: Parser Char a -> Parser Char a
+skipFigureBr pars = space >> satisfy (== '{') >> space >> pars >>= (\x -> space >> satisfy (== '}') >> return x)
+
+parseFigureBr :: Parser Char String
+parseFigureBr = skipFigureBr (allWhile (/= '}'))
+
+-- | A parser that consumes any number
+-- of whitespace characters.
+spaceStr :: Parser Char String
+spaceStr = ((:) <$> satisfy isSpace) <*> spaceStr <|> pure ""
