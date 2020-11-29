@@ -27,6 +27,7 @@ dependencies:
 - process >= 1.6.7
 - regex-tdfa
 - lens
+- split
 
 library:
   source-dirs: src
