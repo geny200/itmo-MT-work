@@ -7,7 +7,7 @@ module Sheol.Template where
 import Control.Applicative ((<|>))
 import Control.Lens
 import Parser.Parser
-import Sheol.Utils (genericJoin, replace)
+import Sheol.Utils (genericJoin, join, replace)
 import Text.Printf (printf)
 
 toTmpName :: String -> String
@@ -23,14 +23,20 @@ data TMPDataAttribute = TMPDataAttribute
     _attributes :: [TMPAttribute]
   }
 
+data TMPContext = TMPContext
+  { _variable :: String,
+    _context :: [String]
+  }
+
 data TMPParserOption = TMPParserOption
-  { _variables :: [String],
+  { _variables :: [TMPContext],
     _expression :: String,
     _condition :: String
   }
 
 data TMPParser = TMPParser
   { _name :: String,
+    _tokenType :: String,
     _returnType :: String,
     _options :: [TMPParserOption]
   }
@@ -45,11 +51,20 @@ data TMPCommonParser = TMPCommonParser
     _doAfter :: String
   }
 
+makeLenses ''TMPContext
 makeLenses ''TMPAttribute
 makeLenses ''TMPDataAttribute
 makeLenses ''TMPParser
 makeLenses ''TMPParserOption
 makeLenses ''TMPCommonParser
+
+instance Show TMPContext where
+  show :: TMPContext -> String
+  show contx =
+    printf
+      "<- %s (cur%s)"
+      (toTmpName (contx ^. variable))
+      (replaceChild (genericJoin " & " (contx ^. context)))
 
 instance Show TMPAttribute where
   show :: TMPAttribute -> String
@@ -68,21 +83,25 @@ instance Show TMPDataAttribute where
       (atr ^. definition)
       (genericJoin "\n  , " (atr ^. attributes))
 
-varsToString :: [String] -> String
-varsToString = genericJoin "\n  "
-
 replaceChild :: String -> String
-replaceChild = replace "\\$[0-9]+" (('a' :) . tail)
+replaceChild = replace "\\$[0-9]+" (set _head 'a')
 
 instance Show TMPParserOption where
   show :: TMPParserOption -> String
   show opt =
     printf
       "do                        \n\
-      \%s                        \n\
+      \  %s                      \n\
       \  %s                      \n\
       \  return (%s)"
-      --(opt ^. variables)
+      ( join
+          "\n  "
+          ( zip [1 :: Int ..] (opt ^. variables)
+              <&> _1 %~ (('a' :) . show)
+              <&> _2 %~ show
+              <&> (^. each)
+          )
+      )
       (replaceChild (opt ^. condition))
       (replaceChild (opt ^. expression))
 
@@ -95,19 +114,20 @@ createDefinition defName tokType retType =
     tokType
     retType
 
-toTokenParser :: String -> TMPParser -> String
-toTokenParser typeName token =
-  printf
-    "%s                          \n\
-    \%s =                        \n\
-    \%s                          \n"
-    ( createDefinition
-        (toTmpName (token ^. name))
-        typeName
-        (token ^. returnType)
-    )
-    (toTmpName (token ^. name))
-    (genericJoin "\n  <|>\n" (token ^. options))
+instance Show TMPParser where
+  show :: TMPParser -> String
+  show token =
+    printf
+      "%s                          \n\
+      \%s cur =                    \n\
+      \%s                          \n"
+      ( createDefinition
+          (toTmpName (token ^. name))
+          (token ^. tokenType)
+          (token ^. returnType)
+      )
+      (toTmpName (token ^. name))
+      (genericJoin "\n  <|>\n" (token ^. options))
 
 instance Show TMPCommonParser where
   show :: TMPCommonParser -> String
@@ -121,6 +141,9 @@ instance Show TMPCommonParser where
       \import Parser.Parser (Parser (..))                              \n\
       \                                                                \n\
       \-- | Generated parsers                                          \n\
+      \errorEndPoint :: Parser Token a                                 \n\
+      \errorEndPoint = Parser sheolError                               \n\
+      \                                                                \n\
       \%s                                                              \n\
       \                                                                \n\
       \-- | Generated parser                                           \n\
@@ -130,11 +153,11 @@ instance Show TMPCommonParser where
       \-- | After block                                                \n\
       \%s                                                              \n"
       (parser ^. doBefore)
-      (concatMap (toTokenParser (parser ^. tokenName)) (parser ^. tmpParsers))
+      ((parser ^. tmpParsers & each . tokenType .~ (parser ^. tokenName) & each %~ show) ^. each)
       ( createDefinition
           (parser ^. parserName)
           (parser ^. tokenName)
-          (head (parser ^. tmpParsers) ^. returnType)
+          (parser ^. tmpParsers ^? _head ^?! _Just ^. returnType)
       )
       (parser ^. parserName)
       (parser ^. parserName)
@@ -143,18 +166,29 @@ instance Show TMPCommonParser where
 
 type Token = Char
 
-name' :: Parser Token a
-name' =
+action1 :: TMPAttribute -> TMPAttribute
+action1 x = x & attributeName .~ "new name" & attributeType .~ "new type"
+
+-- { $2 :: attrName .~ = ...; attrName = ...;
+--   $3 :: ....;
+--   $$ :: ....;
+--   $$ = .....;
+--   where condition
+--  }
+test1 :: TMPAttribute -> Parser Token TMPAttribute
+test1 cur =
   do
-    a1 <- name'
-    a2 <- name'
-    return (a1)
+    a1 <- test1 (action1 cur)
+    --condition
+    return a1
     <|> do
-      a1 <- name'
-      a2 <- name'
-      error "oops"
-      if 1 == 0
-        then pure ()
-        else error "length not equal to 0"
-      pure ()
-      return (a1)
+      a1 <- test1 (action1 cur)
+      --condition
+      return a1
+    <|> errorEndPoint
+
+errorEndPoint :: Parser Token a
+errorEndPoint = Parser sheolError
+
+sheolError :: [Token] -> a
+sheolError _ = error ("Parse error\n")
