@@ -1,15 +1,21 @@
 module Parser.Combinator
   ( -- * Combinators
+    array,
+    arrayJoin,
     allWhile,
     element,
     eof,
+    greedily,
     ok,
     parseFigureBr,
     regExp,
     satisfy,
+    skipFigureBr,
     space,
     spaceStr,
     stream,
+    word,
+    wordSp
   )
 where
 
@@ -88,7 +94,22 @@ skipFigureBr pars = space >> satisfy (== '{') >> space >> pars >>= (\x -> space 
 parseFigureBr :: Parser Char String
 parseFigureBr = skipFigureBr (allWhile (/= '}'))
 
+word :: Parser Char String
+word = allWhile (\x -> 'a' < x && x < 'z' || 'A' < x && x < 'Z')
+
+wordSp :: Parser Char String
+wordSp = allWhile (\x -> 'a' < x && x < 'z' || 'A' < x && x < 'Z' || x == '_')
+
 -- | A parser that consumes any number
 -- of whitespace characters.
 spaceStr :: Parser Char String
 spaceStr = ((:) <$> satisfy isSpace) <*> spaceStr <|> pure ""
+
+array :: Parser s a -> Parser s [a]
+array pars = (:) <$> pars <*> (array pars <|> pure [])
+
+arrayJoin :: (a -> a -> a) -> Parser s a -> a -> Parser s a
+arrayJoin combine pars el = (combine <$> pars <*> arrayJoin combine pars el) <|> pure el
+
+greedily :: Parser s (a -> a) -> Parser s (a -> a)
+greedily x = arrayJoin (.) x id 
