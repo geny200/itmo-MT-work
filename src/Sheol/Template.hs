@@ -14,13 +14,13 @@ toTmpName :: String -> String
 toTmpName x = "parser" ++ x
 
 data TMPAttribute = TMPAttribute
-  { _attributeName :: String,
-    _attributeType :: String
+  { _attributeName :: String, --
+    _attributeType :: String --
   }
 
 data TMPDataAttribute = TMPDataAttribute
-  { _definition :: String,
-    _attributes :: [TMPAttribute]
+  { _definition :: String, --
+    _attributes :: [TMPAttribute] --
   }
 
 data TMPContext = TMPContext
@@ -30,7 +30,7 @@ data TMPContext = TMPContext
 
 data TMPParserOption = TMPParserOption
   { _variables :: [TMPContext],
-    _expression :: String,
+    _expression :: [String],
     _condition :: String
   }
 
@@ -42,13 +42,13 @@ data TMPParser = TMPParser
   }
 
 data TMPCommonParser = TMPCommonParser
-  { _doBefore :: String,
-    _attribute :: TMPDataAttribute,
-    _lexerName :: String,
-    _parserName :: String,
-    _tokenName :: String,
+  { _doBefore :: String, --
+    _attribute :: TMPDataAttribute, --
+    _lexerName :: String, --
+    _parserName :: String, --
+    _tokenName :: String, --
     _tmpParsers :: [TMPParser],
-    _doAfter :: String
+    _doAfter :: String --
   }
 
 makeLenses ''TMPContext
@@ -103,16 +103,17 @@ instance Show TMPParserOption where
           )
       )
       (replaceChild (opt ^. condition))
-      (replaceChild (opt ^. expression))
+      --(replaceChild (opt ^. expression))
 
 createDefinition :: String -> String -> String -> String
 createDefinition _ _ [] = []
-createDefinition defName tokType retType =
-  printf
-    "%s :: Parser [%s] %s"
-    defName
-    tokType
-    retType
+createDefinition defName tokType retType = ""
+
+--  printf
+--    "%s :: Parser [%s] %s"
+--    defName
+--    tokType
+--    retType
 
 instance Show TMPParser where
   show :: TMPParser -> String
@@ -139,6 +140,8 @@ instance Show TMPCommonParser where
       \                                                                \n\
       \import Control.Applicative ((<|>))                              \n\
       \import Parser.Parser (Parser (..))                              \n\
+      \                                                                \n\
+      \-- parser produced by Sheol Version 1.0.0                       \n\
       \                                                                \n\
       \-- | Generated parsers                                          \n\
       \errorEndPoint :: Parser Token a                                 \n\
