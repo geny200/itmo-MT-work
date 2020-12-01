@@ -95,10 +95,10 @@ parseFigureBr :: Parser Char String
 parseFigureBr = skipFigureBr (allWhile (/= '}'))
 
 word :: Parser Char String
-word = allWhile (\x -> 'a' < x && x < 'z' || 'A' < x && x < 'Z')
+word = allWhile (\x -> 'a' <= x && x <= 'z' || 'A' <= x && x <= 'Z')
 
 wordSp :: Parser Char String
-wordSp = allWhile (\x -> 'a' < x && x < 'z' || 'A' < x && x < 'Z' || x == '_')
+wordSp = allWhile (\x -> 'a' <= x && x <= 'z' || 'A' <= x && x <= 'Z' || x == '_')
 
 -- | A parser that consumes any number
 -- of whitespace characters.
