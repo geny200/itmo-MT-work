@@ -7,7 +7,6 @@ module Sheol.Utils
 where
 
 import Data.List (intercalate)
-import Data.List.Split (splitOn)
 import Text.Regex.TDFA ((=~))
 
 join :: [a] -> [[a]] -> [a]
@@ -15,9 +14,6 @@ join = intercalate
 
 genericJoin :: Show a => String -> [a] -> String
 genericJoin delimit l = join delimit (map show l)
-
---replace :: Eq a => [a] -> [a] -> [a] -> [a]
---replace old new = join new . splitOn old
 
 replace :: String -> (String -> String) -> String -> String
 replace regExp repl str

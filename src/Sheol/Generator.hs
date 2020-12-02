@@ -7,13 +7,14 @@ module Sheol.Generator
 where
 
 import Control.Applicative ((<**>), (<|>))
+import Control.Category ((>>>))
 import Control.Lens (ix, (%~), (.~))
-import Parser.Combinator (allWhile, array, element, greedily, parseFigureBr, regExp, skipFigureBr, space, stream, word, wordSp)
+import Parser.Combinator (allWhile, array, element, greedily, greedilyLeft, parseChangFgBr, parseChangWord, parseFigureBlock, parseFigureBr, regExp, skipFigureBr, space, stream, word, wordSp)
 import Parser.Parser (Parser (..))
-import Sheol.Template --(TMPParser (..), TMPParserOption(..), TMPContext(..), TMPAttribute(..), TMPCommonParser(..), TMPDataAttribute(..))
+import Sheol.Template
 
 defaultTMPCommonParser :: TMPCommonParser
-defaultTMPCommonParser = TMPCommonParser [] (TMPDataAttribute [] []) [] [] [] [] []
+defaultTMPCommonParser = TMPCommonParser [] (TMPDataAttribute [] []) [] [] [] [] [] []
 
 defaultTMPParser :: String -> TMPParser
 defaultTMPParser strName = TMPParser strName [] [] []
@@ -29,24 +30,27 @@ parseTmp =
           )
       <*> parseFigureBlock doAfter
   )
-    <*> pure defaultTMPCommonParser
-
-parseFigureBlock field = ((field .~) <$> parseFigureBr) <|> pure id
+    <*> pure defaultTMPCommonParser <* space
 
 parseKeyWord :: Parser Char (TMPCommonParser -> TMPCommonParser)
 parseKeyWord =
-  element '%'
-    >> ( (stream "attribute" >> parseAttribute)
-           <|> (stream "attributetype" >> parseChangFgBr (attribute . definition))
+  space >> element '%'
+    >> ( (stream "attributetype" >> parseChangFgBr (attribute . definition))
+           <|> (stream "attribute" >> parseAttribute)
            <|> (stream "tokentype" >> parseChangFgBr tokenName)
+           <|> (stream "token" >> greedily (space >> parseToken <* space))
            <|> (stream "name" >> parseChangWord parserName)
            <|> (stream "lexername" >> parseChangWord lexerName)
            <|> (element '%' >> parseGramma)
        )
 
-parseChangWord field = (field .~) <$> (space >> word)
+parseToken :: Parser Char (TMPCommonParser -> TMPCommonParser)
+parseToken =
+  (\token -> tokens %~ (token :))
+    <$> ((.) <$> ((pattern .~) <$> (space >> wordSp)) <*> parseTokenExpr <*> pure (TMPToken [] [] []))
 
-parseChangFgBr field = (field .~) <$> parseFigureBr
+parseTokenExpr :: Parser Char (TMPToken -> TMPToken)
+parseTokenExpr = skipFigureBr ((.) <$> ((tokenExpr .~) <$> codeLine) <*> (semicolon >> parseReturnExpression (returnExpr .~) <|> pure id))
 
 parseAttribute :: Parser Char (TMPCommonParser -> TMPCommonParser)
 parseAttribute =
@@ -59,21 +63,17 @@ parseGramma = greedily ((\pars -> tmpParsers %~ (pars :)) <$> parseGrammaParser)
 parseGrammaParser :: Parser Char TMPParser
 parseGrammaParser =
   (defaultTMPParser <$> (space >> word))
-    <**> (dblColon >> parseChangFgBr returnType <|> pure id)
-    <**> parseGrammaOptions
+    <**> ((dblColon >> parseChangFgBr returnType) <|> pure id)
+    <**> (space >> element ':' >> parseGrammaOptions)
 
 parseGrammaOptions :: Parser Char (TMPParser -> TMPParser)
-parseGrammaOptions = greedily ((\opt -> options %~ (opt :)) <$> (parseGrammaOption <*> pure defaultTMPParserOption))
+parseGrammaOptions =
+  (.) <$> ((\opt -> options %~ (opt :)) <$> (parseGrammaOption <*> pure defaultTMPParserOption))
+    <*> greedily ((\opt -> options %~ (opt :)) <$> (space >> element '|' >> parseGrammaOption <*> pure defaultTMPParserOption))
 
 parseGrammaOption :: Parser Char (TMPParserOption -> TMPParserOption)
-parseGrammaOption = (.) <$> parseGrammaOptionVar <*> (skipFigureBr (greedily parseGrammaOptionContex) <|> pure id)
+parseGrammaOption = (>>>) <$> (parseGrammaOptionVar <|> pure id) <*> (skipFigureBr (greedily parseGrammaOptionContex) <|> pure id)
 
--- { $2 :: attrName .~ = ...; attrName = ...;
---   $3 :: ....;
---   $$ :: ....;
---   $$ = .....;
---   where condition
---  }
 parseGrammaOptionContex :: Parser Char (TMPParserOption -> TMPParserOption)
 parseGrammaOptionContex =
   space
@@ -84,16 +84,20 @@ parseGrammaOptionContex =
              (variables . ix (nuh :: Int) . context .~)
                <$> array (codeLine <* semicolon)
          )
-           <|> ( stream "$$"
-                   >> dblColon
-                   >> (expression .~)
-                   <$> array (codeLine <* semicolon)
-               )
+           <|> parseReturnExpression (expression .~)
            <|> ( stream "where"
                    >> (condition .~)
                    <$> codeLine <* semicolon
                )
        )
+      <* semicolon
+
+parseReturnExpression field =
+  ( stream "$$"
+      >> dblColon
+      >> field
+      <$> array (codeLine <* semicolon)
+  )
 
 parseGrammaOptionVar :: Parser Char (TMPParserOption -> TMPParserOption)
 parseGrammaOptionVar = greedily ((\var -> variables %~ (TMPContext var [] :)) <$> (space >> wordSp))
@@ -102,7 +106,7 @@ dblColon :: Parser Char ()
 dblColon = space >> stream "::" >> space
 
 semicolon :: Parser Char ()
-semicolon = space >> element ';' >> space
+semicolon = (space >> element ';' >> space) <|> pure ()
 
 codeLine :: Parser Char String
 codeLine = space >> allWhile (\x -> x /= ';' && x /= '}')
