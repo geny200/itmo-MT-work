@@ -1,44 +1,45 @@
 module Lexer.Lexer
-  (
-    lexer
+  ( -- * Lexer
+    lexer,
   )
 where
 
 import Control.Applicative ((<|>))
-import Control.Monad.State.Lazy (State, evalState, get, modify)
-import Lexer.Template (TMPCommonLexer (..), TMPParserToken (..))
-import Parser.Combinator (parseFigureBr, satisfy, space, spaceStr, stream)
+import Control.Category ((>>>))
+import Control.Lens.Operators ((%~), (.~))
+import Lexer.Template (TMPCommonLexer (..), TMPParserToken (..), doAfter, doBefore, expression, lexerName, readToken, tmpParsers, tokenName)
+import Parser.Combinator (element, greedily, parseChangFgBr, parseFigureBlock, satisfy, space, spaceStr, stream)
 import Parser.Parser (Parser (..))
 
 lexer :: Parser Char TMPCommonLexer
 lexer =
-  TMPCommonLexer
-    <$> (parseFigureBr <|> pure "")
-    <*> ((space >> stream "%%lexername" >> parseFigureBr) <|> pure "lexer")
-    <*> ((space >> stream "%%tokentype" >> parseFigureBr) <|> pure "a")
-    <*> (space >> stream "%%tokens" >> evalState parseTmpTokens 0)
-    <*> (parseFigureBr <|> pure "")
+  ( (.)
+      <$> ( (.) <$> parseFigureBlock doBefore
+              <*> greedily parseKeyWord
+          )
+      <*> parseFigureBlock doAfter
+  )
+    <*> pure (TMPCommonLexer [] "lexer" "a" [] []) <* space
 
-parseTmpTokens :: State Integer (Parser Char [TMPParserToken])
-parseTmpTokens =
-  do
-    x <- parseTmpToken
-    xs <- parseTmpTokens
-    return ((:) <$> x <*> (xs <|> pure []))
+parseKeyWord :: Parser Char (TMPCommonLexer -> TMPCommonLexer)
+parseKeyWord =
+  space >> element '%'
+    >> ( (stream "lexername" >> parseChangFgBr lexerName)
+           <|> (stream "tokentype" >> parseChangFgBr tokenName)
+           <|> (stream "token" >> greedily parseTokens)
+       )
 
-parseTmpToken :: State Integer (Parser Char TMPParserToken)
-parseTmpToken =
-  do
-    modify (+ 1)
-    uniqNum <- get
-    return
-      ( TMPParserToken uniqNum
-          <$> expression
-          <*> (parseFigureBr <|> pure "read")
-      )
+parseTokens :: Parser Char (TMPCommonLexer -> TMPCommonLexer)
+parseTokens =
+  (\token -> tmpParsers %~ (token :))
+    <$> ( (>>>)
+            <$> parseExpression
+              <*> (parseChangFgBr readToken <|> pure id)
+              <*> pure (TMPParserToken [] "read")
+        )
 
-expression :: Parser Char String
-expression = space >> exprSkipLastWP
+parseExpression :: Parser Char (TMPParserToken -> TMPParserToken)
+parseExpression = (expression .~) <$> (space >> exprSkipLastWP)
 
 exprSkipLastWP :: Parser Char String
 exprSkipLastWP =

@@ -2,22 +2,22 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Lexer.Template
-  (
-    TMPCommonLexer(..),
-    TMPParserToken(..)
-  ) 
-where
+module Lexer.Template where
+
+--  (
+--    TMPCommonLexer(..),
+--    TMPParserToken(..)
+--  )
 
 import Control.Lens
+import Sheol.Utils (join)
 import Text.Printf (printf)
 
 toTmpName :: Integer -> String
 toTmpName x = "tokenParse" ++ show x
 
 data TMPParserToken = TMPParserToken
-  { _number :: Integer,
-    _expression :: String,
+  { _expression :: String,
     _readToken :: String
   }
 
@@ -32,22 +32,16 @@ data TMPCommonLexer = TMPCommonLexer
 makeLenses ''TMPParserToken
 makeLenses ''TMPCommonLexer
 
-toTokenParser :: String -> TMPParserToken -> String
-toTokenParser typeName token =
+instance Show TMPParserToken where
+  show :: TMPParserToken -> String
+  show token =
     printf
-      "%s :: Parser Char %s\n\
-      \%s = (%s) <$> regExp \"^%s\"\n\n"
-      (toTmpName (token ^. number))
-      typeName
-      (toTmpName (token ^. number))
+      " = (%s) <$> regExp \"^%s\"\n"
       (token ^. readToken)
       (token ^. expression)
 
 --name :: (Read a) => Parser Char a
 --name = read <$> regExp nameRegexp
-
-tmpToNames :: [TMPParserToken] -> String
-tmpToNames = foldl1 (\x y -> x ++ " <|> " ++ y) . foldr (\x -> (toTmpName (x ^. number) :)) []
 
 instance Show TMPCommonLexer where
   show :: TMPCommonLexer -> String
@@ -65,7 +59,7 @@ instance Show TMPCommonLexer where
       \%s                                                              \n\
       \                                                                \n\
       \-- | Union of all token parsers                                 \n\
-      \commonLexer :: Parser Char %s                                    \n\
+      \commonLexer :: Parser Char %s                                   \n\
       \commonLexer = %s                                                \n\
       \                                                                \n\
       \-- | Generated lexer                                            \n\
@@ -75,9 +69,22 @@ instance Show TMPCommonLexer where
       \-- | After block                                                \n\
       \%s                                                              \n"
       (lexer ^. doBefore)
-      (concatMap (toTokenParser (lexer ^. tokenName)) (lexer ^. tmpParsers))
+      ( join
+          "\n"
+          ( zip [1 :: Integer ..] (lexer ^. tmpParsers)
+              <&> _1 %~ toTmpName
+              <&> _2 %~ show
+              <&> (^. each)
+          )
+      )
       (lexer ^. tokenName)
-      (tmpToNames (lexer ^. tmpParsers))
+      ( join
+          " <|> "
+          ( zip [1 :: Integer ..] (lexer ^. tmpParsers)
+              <&> _1 %~ toTmpName
+              <&> (^. _1)
+          )
+      )
       (lexer ^. lexerName)
       (lexer ^. tokenName)
       (lexer ^. lexerName)
