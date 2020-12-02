@@ -19,16 +19,16 @@ module Parser.Combinator
     spaceStr,
     stream,
     word,
-    wordSp
+    wordSp,
   )
 where
 
 import Control.Applicative ((<|>))
-import Data.Char (isSpace, isAlpha, isDigit, isAlphaNum, isSymbol, isSeparator)
-import Parser.Parser (Parser (..))
-import Text.Regex.TDFA
-import Control.Lens ((.~))
 import Control.Category ((>>>))
+import Control.Lens (ASetter, (.~))
+import Data.Char (isAlpha, isSpace)
+import Parser.Parser (Parser (..))
+import Text.Regex.TDFA ((=~~))
 
 -- | The parser never crashes or consumes input
 ok :: Parser s ()
@@ -84,8 +84,8 @@ space :: Parser Char ()
 space =
   (satisfy isSpace >> space)
     <|> pure ()
-    
-allWhile :: (s -> Bool) -> Parser s [s] 
+
+allWhile :: (s -> Bool) -> Parser s [s]
 allWhile p = (:) <$> satisfy p <*> (allWhile p <|> pure [])
 
 regExp :: String -> Parser Char String
@@ -118,13 +118,16 @@ arrayJoin :: (a -> a -> a) -> Parser s a -> a -> Parser s a
 arrayJoin combine pars el = (combine <$> pars <*> arrayJoin combine pars el) <|> pure el
 
 greedily :: Parser s (a -> a) -> Parser s (a -> a)
-greedily x = arrayJoin (.) x id 
+greedily x = arrayJoin (.) x id
 
 greedilyLeft :: Parser s (a -> a) -> Parser s (a -> a)
-greedilyLeft x = arrayJoin (>>>) x id 
+greedilyLeft x = arrayJoin (>>>) x id
 
+parseChangWord :: ASetter s t a String -> Parser Char (s -> t)
 parseChangWord field = (field .~) <$> (space >> word)
 
+parseChangFgBr :: ASetter s t a String -> Parser Char (s -> t)
 parseChangFgBr field = (field .~) <$> parseFigureBr
 
+parseFigureBlock :: ASetter t t a String -> Parser Char (t -> t)
 parseFigureBlock field = ((field .~) <$> parseFigureBr) <|> pure id
