@@ -6,7 +6,11 @@ module Parser.Combinator
     element,
     eof,
     greedily,
+    greedilyLeft,
     ok,
+    parseChangFgBr,
+    parseChangWord,
+    parseFigureBlock,
     parseFigureBr,
     regExp,
     satisfy,
@@ -20,9 +24,11 @@ module Parser.Combinator
 where
 
 import Control.Applicative ((<|>))
-import Data.Char (isSpace)
+import Data.Char (isSpace, isAlpha, isDigit, isAlphaNum, isSymbol, isSeparator)
 import Parser.Parser (Parser (..))
 import Text.Regex.TDFA
+import Control.Lens ((.~))
+import Control.Category ((>>>))
 
 -- | The parser never crashes or consumes input
 ok :: Parser s ()
@@ -89,16 +95,16 @@ regExp strRegExp = Parser $ \input ->
     Just (_, x, xs) -> Just (x, xs)
 
 skipFigureBr :: Parser Char a -> Parser Char a
-skipFigureBr pars = space >> satisfy (== '{') >> space >> pars >>= (\x -> space >> satisfy (== '}') >> return x)
+skipFigureBr pars = space >> element '{' >> space >> pars <* (space >> element '}')
 
 parseFigureBr :: Parser Char String
 parseFigureBr = skipFigureBr (allWhile (/= '}'))
 
 word :: Parser Char String
-word = allWhile (\x -> 'a' <= x && x <= 'z' || 'A' <= x && x <= 'Z')
+word = allWhile isAlpha
 
 wordSp :: Parser Char String
-wordSp = allWhile (\x -> 'a' <= x && x <= 'z' || 'A' <= x && x <= 'Z' || x == '_')
+wordSp = allWhile (\x -> (not . isSpace $ x) && x /= '{' && x /= '}' && x /= '|' && x /= ';' && x /= '%')
 
 -- | A parser that consumes any number
 -- of whitespace characters.
@@ -113,3 +119,12 @@ arrayJoin combine pars el = (combine <$> pars <*> arrayJoin combine pars el) <|>
 
 greedily :: Parser s (a -> a) -> Parser s (a -> a)
 greedily x = arrayJoin (.) x id 
+
+greedilyLeft :: Parser s (a -> a) -> Parser s (a -> a)
+greedilyLeft x = arrayJoin (>>>) x id 
+
+parseChangWord field = (field .~) <$> (space >> word)
+
+parseChangFgBr field = (field .~) <$> parseFigureBr
+
+parseFigureBlock field = ((field .~) <$> parseFigureBr) <|> pure id
