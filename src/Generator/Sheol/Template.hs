@@ -2,14 +2,14 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Sheol.Template where
+module Generator.Sheol.Template where
 
 import Control.Applicative ((<|>))
 import Control.Lens
 import Data.Char (isSpace)
 import Data.List (elemIndex)
-import Parser.Parser
-import Sheol.Utils (genericJoin, join, replace)
+import Generator.Parser.Parser
+import Utils (genericJoin, join, replace)
 import Text.Printf (printf)
 
 toTmpName :: String -> String
@@ -146,7 +146,7 @@ instance Show TMPToken where
   show :: TMPToken -> String
   show token =
     printf
-      " %s =                       \n\ 
+      " %s =                       \n\
       \  do                        \n\
       \    a1 <- satisfy func      \n\
       \    return (%s)             \n\
@@ -181,8 +181,8 @@ instance Show TMPCommonParser where
       \%s                                                              \n\
       \                                                                \n\
       \import Control.Applicative ((<|>))                              \n\
-      \import Parser.Combinator (satisfy)                              \n\
-      \import Parser.Parser (Parser (..))                              \n\
+      \import Generator.Parser.Combinator (satisfy)                    \n\
+      \import Generator.Parser.Parser (Parser (..))                    \n\
       \import Control.Lens (makeLenses, (&))                           \n\
       \                                                                \n\
       \-- parser produced by Sheol Version 1.0.0                       \n\
@@ -212,11 +212,11 @@ instance Show TMPCommonParser where
               <&> (^. each)
           )
       )
-      ((parser ^. tmpParsers & each . options . each . variables . each %~ (find (parser ^. tokens ^.. each . pattern)) & each . tokenType .~ (parser ^. tokenName)  & each %~ show) ^. each)
+      ((parser ^. tmpParsers & each . options . each . variables . each %~ (find (parser ^. tokens ^.. each . pattern)) & each . tokenType .~ (parser ^. tokenName) & each %~ show) ^. each)
       ( "" --createDefinition
---          (parser ^. parserName)
---          (parser ^. tokenName)
---          (parser ^. tmpParsers ^? _head ^?! _Just ^. returnType)
+      --          (parser ^. parserName)
+      --          (parser ^. tokenName)
+      --          (parser ^. tmpParsers ^? _head ^?! _Just ^. returnType)
       )
       (parser ^. parserName)
       (toTmpName (parser ^. tmpParsers ^? _head ^?! _Just ^. name))

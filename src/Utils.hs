@@ -1,4 +1,4 @@
-module Sheol.Utils
+module Utils
   ( -- * Functions
     genericJoin,
     replace,
@@ -16,8 +16,8 @@ genericJoin :: Show a => String -> [a] -> String
 genericJoin delimit l = join delimit (map show l)
 
 replace :: String -> (String -> String) -> String -> String
-replace regExp repl str
-  = firstMach [] (str =~ regExp :: (String, String, String))
+replace regExp repl str =
+  firstMach [] (str =~ regExp :: (String, String, String))
   where
     firstMach :: String -> (String, String, String) -> String
     firstMach acc (x, [], _) = acc ++ x

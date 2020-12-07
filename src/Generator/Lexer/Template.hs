@@ -2,7 +2,7 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Lexer.Template where
+module Generator.Lexer.Template where
 
 --  (
 --    TMPCommonLexer(..),
@@ -10,7 +10,7 @@ module Lexer.Template where
 --  )
 
 import Control.Lens
-import Sheol.Utils (join)
+import Utils (join)
 import Text.Printf (printf)
 
 toTmpName :: Integer -> String
@@ -51,9 +51,8 @@ instance Show TMPCommonLexer where
       \-- | Before block                                               \n\
       \%s                                                              \n\
       \                                                                \n\
-      \import Control.Applicative ((<|>))                              \n\
-      \import Parser.Combinator (eof, regExp)                          \n\
-      \import Parser.Parser (Parser (..))                              \n\
+      \import Generator.Parser.Combinator (eof, regExp)                \n\
+      \import Generator.Parser.Parser (Parser (..), (<|>))             \n\
       \                                                                \n\
       \-- | Token parsers                                              \n\
       \%s                                                              \n\

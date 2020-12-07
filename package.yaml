@@ -28,6 +28,7 @@ dependencies:
 - regex-tdfa
 - lens
 - split
+- containers
 
 library:
   source-dirs: src
@@ -56,3 +57,4 @@ tests:
     - HUnit
     - split
     - QuickCheck
+    - hspec

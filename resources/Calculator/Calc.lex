@@ -1,6 +1,6 @@
 
 {
-module Test.Lexer
+module Interpreter.Calculator.Lexer
   ( -- * Lexer parser
     lexer
 
@@ -21,8 +21,9 @@ import Data.Maybe (fromJust)
 -               { const TokenSub }
 \\*             { const TokenMul }
 /               { const TokenDiv }
-(               { const TokenOB }
-)               { const TokenCB }
+\\(             { const TokenOB }
+\\)             { const TokenCB }
+[ \t\r\n]+      { const TokenSP }
 
 {
 data Token
@@ -32,6 +33,7 @@ data Token
  | TokenDiv
  | TokenOB
  | TokenCB
+ | TokenSP
  | TokenNum Integer
  deriving (Show, Eq)
 

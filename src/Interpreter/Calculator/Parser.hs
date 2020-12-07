@@ -1,24 +1,23 @@
 {-# LANGUAGE TemplateHaskell #-}                                
 -- | Before block                                               
-module Test.Parser
+module Interpreter.Calculator.Parser
   ( -- * Function
     calculate
   )
 where
 
-import Test.Lexer (lexer, Token(..))
+import Interpreter.Calculator.Lexer (lexer, Token(..))
 import Control.Lens ((^.), (.~))
                                                               
                                                                 
 import Control.Applicative ((<|>))                              
-import Parser.Combinator (satisfy)                              
-import Parser.Parser (Parser (..))                              
+import Generator.Parser.Combinator (satisfy)                    
+import Generator.Parser.Parser (Parser (..))                    
 import Control.Lens (makeLenses, (&))                           
                                                                 
 -- parser produced by Sheol Version 1.0.0                       
 data MyData  = SheolAttributes 
-  { _pos :: Int 
-  , _value :: Integer                     
+  { _value :: Integer                     
   }                       
                           
 makeLenses ''MyData           
@@ -61,6 +60,12 @@ token6 cur =
     where func (TokenCB ) = True  
           func _ = False
 token7 cur =                       
+  do                        
+    a1 <- satisfy func      
+    return (cur)             
+    where func (TokenSP ) = True  
+          func _ = False
+token8 cur =                       
   do                        
     a1 <- satisfy func      
     return (cur & value .~ (num a1) )             
@@ -108,14 +113,28 @@ parserT cur =
                           
 parserF cur =                     
   do 
-    a1<- token7 (cur)                    
-    return (cur & value .~ (a1^.value) )
+    a1<- parserS (cur)
+    a2<- token8 (cur)
+    a3<- parserS (cur)                    
+    return (cur & value .~ (a2^.value) )
   <|>
   do 
-    a1<- token5 (cur)
-    a2<- parserE (cur)
-    a3<- token6 (cur)                    
-    return (cur & value .~ (a2^.value) )                          
+    a1<- parserS (cur)
+    a2<- token5 (cur)
+    a3<- parserS (cur)
+    a4<- parserE (cur)
+    a5<- parserS (cur)
+    a6<- token6 (cur)
+    a7<- parserS (cur)                    
+    return (cur & value .~ (a4^.value) )                          
+                          
+parserS cur =                     
+  do 
+    a1<- token7 (cur)                    
+    return (cur)
+  <|>
+  do                     
+    return (cur)                          
                                                               
                                                                 
 -- | Generated parser                                           
@@ -127,7 +146,7 @@ num :: Token -> Integer
 num (TokenNum x) = x
 
 calculate :: String ->Maybe Integer
-calculate str = fst <$> (parser (SheolAttributes 0 0) str)
+calculate str = fst <$> (parser (SheolAttributes 0) str)
 
 sheolError :: [Token] -> a
 sheolError _ = error ("Parse error\n")

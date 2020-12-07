@@ -1,19 +1,15 @@
 module Main where
 
 --import Graph (evaluateGraph)
-import Text.Regex.TDFA
-import Text.Printf (printf)
-import Lexer.Lexer (lexer)
-import Parser.Parser (runParser)
+import Generator.Parser.Parser (Parser(..))
+import System.IO (IOMode(..), openFile, hGetContents, hClose)
 import Data.Maybe (fromJust)
-import System.IO
-import Test
-import Sheol.Generator
-import Parser.Combinator
-import Sheol.Template
-import Parser.Parser
-import Test.Parser
-import Test.Lexer
+import Interpreter.Calculator.Parser (calculate)
+import Utils (join)
+import Generator.Sheol.Generate (parseTmp)
+import Generator.Lexer.Lexer (lexer)
+import Interpreter.PythonToC.Parser (interpret)
+import Interpreter.PythonToC.Lexer (lexer)
 
 testCodeLine :: String
 testCodeLine = "SND TRH { $1 :: pos .~ 0; value .~ 0;; $$ :: pos .~ ($2 ^. pos);; $2 :: pos .~ ($1 ^~ pos);;  }"
@@ -44,10 +40,37 @@ runFile fromFile toFile pars =
       handle <- openFile fromFile ReadMode
       everything <- hGetContents handle
       writeFile toFile (show . fst . fromJust $ runParser pars everything)
-      hClose handle 
+      hClose handle
+      
+runFromFile ::(Show a) => String -> String -> (String -> Maybe a) -> IO ()
+runFromFile fromFile toFile action = 
+    do 
+      handle <- openFile fromFile ReadMode
+      everything <- hGetContents handle
+      writeFile toFile (show . fromJust . action $ everything)
+      hClose handle
+      
+generic :: String -> String -> String -> IO ()
+generic name from to =
+  do 
+    runFile (join "/" [from, name ++ ".ly"]) (join "/" [to, "Parser.hs"]) parseTmp
+    runFile (join "/" [from, name ++ ".lex"]) (join "/" [to, "Lexer.hs"]) Generator.Lexer.Lexer.lexer 
 
 main :: IO ()
-main = print (calculate "2+2*2")
+main =
+  do 
+    --generic "PyToC" "resources/PythonToC" "src/Interpreter/PythonToC/"
+    --generic "Calc" "resources/Calculator" "src/Interpreter/Calculator/"
+    runFromFile "test_calc.in" "test_calc.out" calculate
+    runFromFile "test_py.in" "test_py.out" interpret
+    runFromFile "test_py.in" "test_py.lex" (Just . Interpreter.PythonToC.Lexer.lexer)
+    runFromFile "test_py.in" "test_py.check" Just
+
+
+--print (interpret "2+2*2;")
+--generic "PyToC" "resources/PythonToC" "src/Interpreter/PythonToC/"
+--generic "Calc" "resources/Calculator" "src/Interpreter/Calculator/"
+--print (calculate "2+2*2")
 
 --  do 
 --    runFile "test.ly" "src/Test/Parser.hs" parseTmp

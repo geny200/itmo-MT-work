@@ -1,11 +1,11 @@
 {
-module Test.Parser
+module Interpreter.Calculator.Parser
   ( -- * Function
     calculate
   )
 where
 
-import Test.Lexer (lexer, Token(..))
+import Interpreter.Calculator.Lexer (lexer, Token(..))
 import Control.Lens ((^.), (.~))
 }
 
@@ -14,7 +14,6 @@ import Control.Lens ((^.), (.~))
 
 %lexername lexer
 %attributetype { MyData }
-%attribute pos { Int }
 %attribute value { Integer }
 
 %token '+'      { TokenSum }
@@ -23,6 +22,7 @@ import Control.Lens ((^.), (.~))
        '/'      { TokenDiv }
        '('      { TokenOB }
        ')'      { TokenCB }
+       s        { TokenSP }
        const    { TokenNum _; $$ :: value .~ (num $1) }
 %%
 
@@ -34,17 +34,17 @@ T :    F '*' T	        { $$ :: value .~ ($1^.value * $3^.value) }
      | F '/' T	        { $$ :: value .~ ($1^.value `div` $3^.value) }
      | F			    { $$ :: value .~ ($1^.value) }
 
-F :    const			{ $$ :: value .~ ($1^.value) }
-	 | '(' E ')'		{ $$ :: value .~ ($2^.value) }
+F :    S const S		{ $$ :: value .~ ($2^.value) }
+	 | S '(' S E S ')' S{ $$ :: value .~ ($4^.value) }
 
-
+S : s |
 
 {
 num :: Token -> Integer
 num (TokenNum x) = x
 
 calculate :: String ->Maybe Integer
-calculate str = fst <$> (parser (SheolAttributes 0 0) str)
+calculate str = fst <$> (parser (SheolAttributes 0) str)
 
 sheolError :: [Token] -> a
 sheolError _ = error ("Parse error\n")

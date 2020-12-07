@@ -1,8 +1,9 @@
 {-# LANGUAGE InstanceSigs #-}
 
-module Parser.Parser
+module Generator.Parser.Parser
   ( -- * `Parser` constructors
     Parser (..),
+    (<|>)
   )
 where
 
@@ -43,5 +44,3 @@ instance Alternative (Parser s) where
 
   empty :: Parser s a
   empty = Parser $ const Nothing
-
-

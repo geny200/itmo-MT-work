@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Sheol.Generator
+module Generator.Sheol.Generate
   ( -- * Parser - generator
     parseTmp,
   )
@@ -9,9 +9,9 @@ where
 import Control.Applicative ((<**>), (<|>))
 import Control.Category ((>>>))
 import Control.Lens (ix, (%~), (.~))
-import Parser.Combinator (allWhile, array, element, greedily, greedilyLeft, parseChangFgBr, parseChangWord, parseFigureBlock, parseFigureBr, regExp, skipFigureBr, space, stream, word, wordSp)
-import Parser.Parser (Parser (..))
-import Sheol.Template
+import Generator.Parser.Combinator (allWhile, array, element, greedily, parseChangFgBr, parseChangWord, parseFigureBlock, parseFigureBr, regExp, skipFigureBr, space, stream, word, wordSp)
+import Generator.Parser.Parser (Parser (..))
+import Generator.Sheol.Template
 
 defaultTMPCommonParser :: TMPCommonParser
 defaultTMPCommonParser = TMPCommonParser [] (TMPDataAttribute [] []) [] [] [] [] [] []
