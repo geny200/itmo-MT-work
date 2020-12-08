@@ -181,7 +181,7 @@ instance Show TMPCommonParser where
       \%s                                                              \n\
       \                                                                \n\
       \import Control.Applicative ((<|>))                              \n\
-      \import Generator.Parser.Combinator (satisfy)                    \n\
+      \import Generator.Parser.Combinator (satisfy, nothing)           \n\
       \import Generator.Parser.Parser (Parser (..))                    \n\
       \import Control.Lens (makeLenses, (&))                           \n\
       \                                                                \n\

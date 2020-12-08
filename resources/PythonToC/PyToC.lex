@@ -29,6 +29,7 @@ import Data.Set (Set (..), toList)
 \\(                 { const TokenOB }
 \\)                 { const TokenCB }
 =                   { const TokenEq }
+:                   { const TokenColon }
 int                 { const TokenInt }
 while               { const TokenWhile }
 if                  { const TokenIf }
@@ -36,7 +37,8 @@ else                { const TokenElse }
 print               { const TokenPrint }
 input               { const TokenInput }
 [ \v\r\f]+          { const TokenSP }
-[\n;]([ \t\v\r\f]*[\n;])? { const TokenEndl }
+;                   { const TokenSemicolon }
+[\n]([ \t\v\r\f]*\n)* { const TokenEndl }
 [\t]                { const TokenTab }
 [a-zA-Z][a-zA-Z0-9]*{ TokenName }
 
@@ -59,6 +61,8 @@ data Token
  | TokenEndl
  | TokenTab
  | TokenDot
+ | TokenColon
+ | TokenSemicolon
  | TokenName String
  | TokenNum String
  deriving (Show, Eq)
@@ -72,6 +76,9 @@ data DataTree
  | Print DataTree
  | Block DataTree (Set DataTree)
  | BlockTail DataTree DataTree
+ | Tail DataTree
+ | Main DataTree
+ | Flag String
  | Nop
  deriving (Eq, Ord)
 

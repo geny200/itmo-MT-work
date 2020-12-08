@@ -10,7 +10,6 @@ import Control.Lens ((^.), (.~), (%~))
 import Data.Set (Set (..), empty, insert, toList)
 import Utils (genericJoin, join)
 import Control.Monad (unless)
-
 }
 
 %name parser
@@ -30,6 +29,8 @@ import Control.Monad (unless)
        ')'      { TokenCB }
        '='      { TokenEq }
        '.'      { TokenDot }
+       ':'      { TokenColon }
+       SCol     { TokenSemicolon }
        s        { TokenSP }
        int      { TokenInt }
        while    { TokenWhile }
@@ -43,15 +44,25 @@ import Control.Monad (unless)
        const    { TokenNum _; $$ :: value .~ (inside $1) }
 %%
 
+PROGRAM :
+    BLOCK                       { $$ :: value .~ (Main ($1^.value)) }
+
 BLOCK :
-      BLOCKTAIL                 { $$ :: value .~ (Block ($1^.value) ($1^.vars)) }
+      BLOCKTAIL                 { $$ :: value .~ (BlockTail (Block ($1^.value) ($1^.vars)) (Flag "b-> 1")) }
+    | ANYEXPR endl BLOCKTAIL    { $3 :: vars .~  ($1^.vars);;
+                                  $$ :: value .~ (BlockTail (Block (BlockTail ($1^.value) ($3^.value)) ($3^.vars)) (Flag "b -> 2")) }
+    | ANYEXPR                   { $$ :: value .~ (BlockTail (Block (Tail ($1^.value)) ($1^.vars)) (Flag "b -> 3")) }
 
 BLOCKTAIL :
-      TAB ASSIGN endl BLOCKTAIL      { $4 :: vars .~ ($2^.vars);;
+      TAB ANYEXPR endl BLOCKTAIL{ $4 :: vars .~ ($2^.vars);;
                                   $$ :: value .~ (BlockTail ($2^.value) ($4^.value));
                                         vars .~ ($4^.vars) }
-    | TAB CONTROL endl BLOCKTAIL     { $$ :: value .~ (BlockTail ($2^.value) ($4^.value)) }
-    |                           {}
+    | TAB CONTROL endl BLOCKTAIL{ $$ :: value .~ (BlockTail ($2^.value) ($4^.value));
+                                        vars .~ ($4^.vars) }
+    | TAB CONTROL               { $$ :: value .~ (BlockTail ($2^.value) (Flag "t -> 3")) }
+    | S endl BLOCKTAIL          { $$ :: value .~ ($3^.value); vars .~ ($3^.vars) }
+    | TAB ANYEXPR               { $$ :: value .~ (BlockTail ($2^.value) (Flag "t -> 5"));
+                                        vars .~ ($2^.vars)}
 
 E :   T '+' E     	    	    { $$ :: value .~ (BinOp "+" ($1^.value) ($3^.value)) }
     | T '-' E		            { $$ :: value .~ (BinOp "-" ($1^.value) ($3^.value)) }
@@ -63,6 +74,7 @@ T :   F '*' T	                { $$ :: value .~ (BinOp "*" ($1^.value) ($3^.value
 
 F :   NUM		                { $$ :: value .~ ($1^.value) }
     | BR                        { $$ :: value .~ ($1^.value) }
+    | S name S                  { $$ :: value .~ ($2^.value) }
 
 BR :  S '(' S E S ')' S         { $$ :: value .~ (Bracket ($4^.value)) }
 
@@ -70,43 +82,51 @@ NUM :
       S const S '.' S const S   { $$ :: value .~ (BinOp "." ($2^.value) ($6^.value)) }
     | S const S                 { $$ :: value .~ ($2^.value) }
 
-
-
 CONTROL :
-      while BR BLOCK            { $3 :: pos %~ (+1);;
-                                  $$ :: value .~ (While ($2^.value) ($3^.value)) }
+      while E S ':' S BLOCK     { $6 :: pos %~ (+1); vars .~ (empty);;
+                                  $$ :: value .~ (While ($2^.value) ($6^.value)) }
+ANYEXPR :
+      ASSIGN S SCol S ANYEXPR   { $5 :: vars .~ ($1^.vars);;
+                                  $$ :: value .~ (BlockTail ($1^.value) ($5^.value));
+                                        vars .~ ($5^.vars) }
+    | ASSIGN                    { $$ :: value .~ ($1^.value);
+                                        vars .~ ($1^.vars) }
+    |                           { $$ :: value .~ (Flag "empty ANYEXPR")}
 
 ASSIGN :
-      name s '=' s E            { $$ :: value .~ (BinOp "=" ($1^.value) ($5^.value)); vars %~ insert ($1^.value) }
-    | name s '=' s INT          { $5 :: value .~ $1^.value;;
+      name S '=' S E            { $$ :: value .~ (BinOp "=" ($1^.value) ($5^.value)); vars %~ insert ($1^.value) }
+    | name S '=' S INT          { $5 :: value .~ $1^.value;;
                                   $$ :: value .~ (BinOp "=" ($1^.value) ($5^.value)); vars %~ insert ($1^.value) }
     | E                         { $$ :: value .~ ($1^.value) }
 
-INT : int s '(' s input s '(' s ')' s ')' s
+INT : int S '(' S input S '(' S ')' S ')' S
                                 { $$ :: value %~ (Input) }
 PRINT :
       print BR                  { $$ :: value .~ (Print ($1^.value)) }
 
 TAB :
       tab TAB                   { $2 :: pos %~ (\x -> x - 1) }
-    | S                         { where unless ($1^.pos == 0) (error "wrong tab") }
+    | S                         { where unless ($1^.pos == 0) nothing }
 
 S : s | {}
 {
 instance Show DataTree where
-    show (BinOp op l r) = (show l) ++ op ++ (show r)
+    show (BinOp op l r) = join (" " ++ op ++ " ") [show l, show r]
     show (Const val) = val
-    show (Bracket x) = "(" ++ (show x) ++ ")"
-    show (While x y) = "while" ++ (show x) ++ (show y)
-    show Nop = "Nop"
-    show (BlockTail x y) = join "\n" [show x, show y]
+    show (Bracket x) = " (" ++ (show x) ++ ") "
+    show (While x y) = "while (" ++ (show x) ++ ") {\n" ++ (show y) ++ "\n\125"
+    show Nop = []
+    show (BlockTail x y) = join ";\n" [show x, show y]
+    show (Tail x) = show x ++ ";\n"
     show (Block x var) =
         (if not . null $ var
-        then "int " ++ (genericJoin ", " (toList var)) ++ "\n"
+        then "int " ++ (genericJoin ", " (toList var)) ++ ";\n"
         else "")
         ++ show x
     show (Input x) = "scanf(\"%d\", &" ++ (show x) ++ ")"
     show (Print x) = "printf(\"%d\"," ++ (show x) ++ ")"
+    show (Main x) = "int main() {\n" ++ (show x) ++ "\n\treturn 0; \n \125"
+    show (Flag _) = []
 
 inside :: Token -> DataTree
 inside (TokenNum x) = Const x

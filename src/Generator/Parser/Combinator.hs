@@ -7,6 +7,7 @@ module Generator.Parser.Combinator
     eof,
     greedily,
     greedilyLeft,
+    nothing,
     ok,
     parseChangFgBr,
     parseChangWord,
@@ -28,7 +29,7 @@ import Control.Category ((>>>))
 import Control.Lens (ASetter, (.~))
 import Data.Char (isAlpha, isSpace)
 import Generator.Parser.Parser (Parser (..))
-import Text.Regex.TDFA ((=~~))
+import Text.Regex.TDFA --((=~~), multiline, makeRegexOpts, defaultCompOpt, defaultExecOpt)
 
 -- | The parser never crashes or consumes input
 ok :: Parser s ()
@@ -40,6 +41,11 @@ eof :: Parser s ()
 eof = Parser f
   where
     f [] = Just ((), [])
+    f _ = Nothing
+
+nothing :: Parser s ()
+nothing = Parser f
+  where
     f _ = Nothing
 
 -- | The parser accepts a predicate on a stream
@@ -88,9 +94,12 @@ space =
 allWhile :: (s -> Bool) -> Parser s [s]
 allWhile p = (:) <$> satisfy p <*> (allWhile p <|> pure [])
 
+toRegex :: String -> Regex
+toRegex = makeRegexOpts defaultCompOpt {multiline = False} defaultExecOpt
+
 regExp :: String -> Parser Char String
 regExp strRegExp = Parser $ \input ->
-  case input =~~ strRegExp :: Maybe (String, String, String) of
+  case matchM (toRegex strRegExp) input :: Maybe (String, String, String) of
     Nothing -> Nothing
     Just (_, x, xs) -> Just (x, xs)
 

@@ -42,12 +42,12 @@ runFile fromFile toFile pars =
       writeFile toFile (show . fst . fromJust $ runParser pars everything)
       hClose handle
       
-runFromFile ::(Show a) => String -> String -> (String -> Maybe a) -> IO ()
-runFromFile fromFile toFile action = 
-    do 
+runFromFile :: String -> String -> (String -> Maybe String) -> IO ()
+runFromFile fromFile toFile action =
+    do
       handle <- openFile fromFile ReadMode
       everything <- hGetContents handle
-      writeFile toFile (show . fromJust . action $ everything)
+      writeFile toFile (fromJust . action $ everything)
       hClose handle
       
 generic :: String -> String -> String -> IO ()
@@ -59,12 +59,12 @@ generic name from to =
 main :: IO ()
 main =
   do 
-    --generic "PyToC" "resources/PythonToC" "src/Interpreter/PythonToC/"
+    generic "PyToC" "resources/PythonToC" "src/Interpreter/PythonToC/"
     --generic "Calc" "resources/Calculator" "src/Interpreter/Calculator/"
-    runFromFile "test_calc.in" "test_calc.out" calculate
-    runFromFile "test_py.in" "test_py.out" interpret
-    runFromFile "test_py.in" "test_py.lex" (Just . Interpreter.PythonToC.Lexer.lexer)
+    runFromFile "test_calc.in" "test_calc.out" (fmap show . calculate)
+    runFromFile "test_py.in" "test_py.lex" (fmap show . Just . Interpreter.PythonToC.Lexer.lexer)
     runFromFile "test_py.in" "test_py.check" Just
+    runFromFile "test_py.in" "test_py.out" interpret
 
 
 --print (interpret "2+2*2;")

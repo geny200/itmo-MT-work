@@ -36,30 +36,34 @@ tokenParse8 = (const TokenCB ) <$> regExp "^\\)"
 
 tokenParse9 = (const TokenEq ) <$> regExp "^="
 
-tokenParse10 = (const TokenInt ) <$> regExp "^int"
+tokenParse10 = (const TokenColon ) <$> regExp "^:"
 
-tokenParse11 = (const TokenWhile ) <$> regExp "^while"
+tokenParse11 = (const TokenInt ) <$> regExp "^int"
 
-tokenParse12 = (const TokenIf ) <$> regExp "^if"
+tokenParse12 = (const TokenWhile ) <$> regExp "^while"
 
-tokenParse13 = (const TokenElse ) <$> regExp "^else"
+tokenParse13 = (const TokenIf ) <$> regExp "^if"
 
-tokenParse14 = (const TokenPrint ) <$> regExp "^print"
+tokenParse14 = (const TokenElse ) <$> regExp "^else"
 
-tokenParse15 = (const TokenInput ) <$> regExp "^input"
+tokenParse15 = (const TokenPrint ) <$> regExp "^print"
 
-tokenParse16 = (const TokenSP ) <$> regExp "^[ \v\r\f]+"
+tokenParse16 = (const TokenInput ) <$> regExp "^input"
 
-tokenParse17 = (const TokenEndl ) <$> regExp "^[\n;]([ \t\v\r\f]*[\n;])?"
+tokenParse17 = (const TokenSP ) <$> regExp "^[ \v\r\f]+"
 
-tokenParse18 = (const TokenTab ) <$> regExp "^[\t]"
+tokenParse18 = (const TokenSemicolon ) <$> regExp "^;"
 
-tokenParse19 = (TokenName ) <$> regExp "^[a-zA-Z][a-zA-Z0-9]*"
+tokenParse19 = (const TokenEndl ) <$> regExp "^[\n]([ \t\v\r\f]*\n)*"
+
+tokenParse20 = (const TokenTab ) <$> regExp "^[\t]"
+
+tokenParse21 = (TokenName ) <$> regExp "^[a-zA-Z][a-zA-Z0-9]*"
                                                               
                                                                 
 -- | Union of all token parsers                                 
 commonLexer :: Parser Char Token                                    
-commonLexer = tokenParse1 <|> tokenParse2 <|> tokenParse3 <|> tokenParse4 <|> tokenParse5 <|> tokenParse6 <|> tokenParse7 <|> tokenParse8 <|> tokenParse9 <|> tokenParse10 <|> tokenParse11 <|> tokenParse12 <|> tokenParse13 <|> tokenParse14 <|> tokenParse15 <|> tokenParse16 <|> tokenParse17 <|> tokenParse18 <|> tokenParse19                                                
+commonLexer = tokenParse1 <|> tokenParse2 <|> tokenParse3 <|> tokenParse4 <|> tokenParse5 <|> tokenParse6 <|> tokenParse7 <|> tokenParse8 <|> tokenParse9 <|> tokenParse10 <|> tokenParse11 <|> tokenParse12 <|> tokenParse13 <|> tokenParse14 <|> tokenParse15 <|> tokenParse16 <|> tokenParse17 <|> tokenParse18 <|> tokenParse19 <|> tokenParse20 <|> tokenParse21                                                
                                                                 
 -- | Generated lexer                                            
 myLexer  :: Parser Char [Token ]                                          
@@ -84,6 +88,8 @@ data Token
  | TokenEndl
  | TokenTab
  | TokenDot
+ | TokenColon
+ | TokenSemicolon
  | TokenName String
  | TokenNum String
  deriving (Show, Eq)
@@ -97,6 +103,9 @@ data DataTree
  | Print DataTree
  | Block DataTree (Set DataTree)
  | BlockTail DataTree DataTree
+ | Tail DataTree
+ | Main DataTree
+ | Flag String
  | Nop
  deriving (Eq, Ord)
 
