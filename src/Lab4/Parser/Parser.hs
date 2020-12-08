@@ -1,6 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
 
-module Generator.Parser.Parser
+module Lab4.Parser.Parser
   ( -- * `Parser` constructors
     Parser (..),
     (<|>)

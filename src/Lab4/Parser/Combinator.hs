@@ -1,4 +1,4 @@
-module Generator.Parser.Combinator
+module Lab4.Parser.Combinator
   ( -- * Combinators
     array,
     arrayJoin,
@@ -28,7 +28,7 @@ import Control.Applicative ((<|>))
 import Control.Category ((>>>))
 import Control.Lens (ASetter, (.~))
 import Data.Char (isAlpha, isSpace)
-import Generator.Parser.Parser (Parser (..))
+import Lab4.Parser.Parser (Parser (..))
 import Text.Regex.TDFA --((=~~), multiline, makeRegexOpts, defaultCompOpt, defaultExecOpt)
 
 -- | The parser never crashes or consumes input

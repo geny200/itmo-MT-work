@@ -1,49 +1,48 @@
-{-# LANGUAGE InstanceSigs #-}
-
-module Tree
-  ( 
+module Lab2.Tree
+  ( -- * Tree constructors
     Tree (..)
+   
+    -- * Function
   , evaluateTree
   )
 where
 
-import Control.Monad.Cont             (lift)
-import Control.Monad.Except           (ExceptT, catchError, runExceptT, throwError)
+import Control.Monad.Cont (lift)
+import Control.Monad.Except (ExceptT, catchError, runExceptT, throwError)
 import Control.Monad.Trans.State.Lazy (State, evalState, get, put)
-import Data.Maybe                     (catMaybes)
-import Token                          (Token (..))
-import Control.Applicative (liftA2)
+import Data.Maybe (catMaybes)
+import Lab2.Token (Token (..))
 
 data Tree
   = Leaf Token
   | Node [Tree]
   deriving (Show, Eq)
 
-evaluateTree 
-  :: [Token] 
-  -> Either String (Maybe Tree)
+evaluateTree ::
+  [Token] ->
+  Either String (Maybe Tree)
 evaluateTree tokens = toRevers tokens (evalState (runExceptT startPrime) tokens)
 
 --------------------
 ---    Utils     ---
 --------------------
 
-toRevers 
-  :: [Token] 
-  -> Either (String, Int) (Maybe Tree) 
-  -> Either String (Maybe Tree)
-toRevers tokens (Left (str, num)) 
-  = Left (str ++ " at lextoken position " ++ show (length tokens - num))
+toRevers ::
+  [Token] ->
+  Either (String, Int) (Maybe Tree) ->
+  Either String (Maybe Tree)
+toRevers tokens (Left (str, num)) =
+  Left (str ++ " at lextoken position " ++ show (length tokens - num))
 toRevers _ (Right x) = Right x
 
 joinNode :: [Maybe Tree] -> Maybe Tree
 joinNode list = return $ Node (catMaybes list)
 
-casePred
-  :: ([Token] -> Bool)
-  -> (Maybe Tree -> ExceptT (String, Int) (State [Token]) (Maybe Tree))
-  -> Maybe Tree
-  -> ExceptT (String, Int) (State [Token]) (Maybe Tree)
+casePred ::
+  ([Token] -> Bool) ->
+  (Maybe Tree -> ExceptT (String, Int) (State [Token]) (Maybe Tree)) ->
+  Maybe Tree ->
+  ExceptT (String, Int) (State [Token]) (Maybe Tree)
 casePred pr f left =
   do
     s <- lift get
@@ -60,10 +59,10 @@ isOr (Or : _) = True
 isOr (Xor : _) = True
 isOr _ = False
 
-checkAndGetToken
-  :: (Token -> Bool)
-  -> [Token]
-  -> ExceptT (String, Int) (State [Token]) (Maybe Tree)
+checkAndGetToken ::
+  (Token -> Bool) ->
+  [Token] ->
+  ExceptT (String, Int) (State [Token]) (Maybe Tree)
 checkAndGetToken _ [] = throwError ("unexpected token - empty", 0)
 checkAndGetToken f (x : res)
   | f x = do
@@ -71,14 +70,14 @@ checkAndGetToken f (x : res)
     return . Just . Leaf $ x
   | otherwise = throwError ("unexpected token - " ++ show x, length (x : res))
 
-getToken
-  :: (Token -> Bool)
-  -> ExceptT (String, Int) (State [Token]) (Maybe Tree)
+getToken ::
+  (Token -> Bool) ->
+  ExceptT (String, Int) (State [Token]) (Maybe Tree)
 getToken predicate =
   do
     s <- lift get
     checkAndGetToken predicate s
-    
+
 ---------------------------------------
 ---    Recursive descent parser     ---
 ---------------------------------------
@@ -134,36 +133,3 @@ nodeT =
     correctTokenTwo <- getToken (== BrClose)
     return $ joinNode [correctTokenOne, tokenE, correctTokenTwo]
     `catchError` (\_ -> getToken (== Var))
-    
-data MM = 
-  MM String
-  | NN Int
-
-instance Semigroup MM where 
-  (<>) :: a -> b -> c 
-  (<>) = undefined
-  
-instance Monoid MM where 
-  mempty:: MM
-  mempty = undefined 
-
-newtype MyData a = MyData {run :: a -> a}
-
-instance Functor MyData where
-  fmap :: (a -> b) -> MyData a -> MyData b 
-  fmap = undefined
-  
-instance Foldable MyData where
-  foldMap :: (a -> m) -> MyData a -> m 
-  foldMap = undefined
-  
-instance Applicative MyData where 
-  (<*>) = liftA2 id
-  
-  pure :: a -> MyData a 
-  pure = undefined
-  
-instance Monad MyData where
-  (>>=) :: MyData a -> (a -> MyData b) -> MyData b 
-  (>>=) = undefined
-

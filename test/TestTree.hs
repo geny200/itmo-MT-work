@@ -6,8 +6,8 @@ where
 
 import Common
 import Test.HUnit
-import Token
-import Tree
+import Lab2.Token
+import Lab2.Tree
 import Data.Either (fromRight)
 
 testsSimpleAndOrXor :: Test

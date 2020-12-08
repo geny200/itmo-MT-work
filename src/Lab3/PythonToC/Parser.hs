@@ -1,21 +1,21 @@
 {-# LANGUAGE TemplateHaskell #-}                                
 -- | Before block                                               
-module Interpreter.PythonToC.Parser
+module Lab3.PythonToC.Parser
   ( -- * Function
     interpret
   )
 where
 
-import Interpreter.PythonToC.Lexer (lexer, Token(..), DataTree(..))
+import Lab3.PythonToC.Lexer (lexer, Token(..), DataTree(..))
 import Control.Lens ((^.), (.~), (%~))
-import Data.Set (Set (..), empty, insert, toList)
+import Data.Set (Set (..), difference, empty, insert, toList)
 import Utils (genericJoin, join)
 import Control.Monad (unless)
                                                               
                                                                 
 import Control.Applicative ((<|>))                              
-import Generator.Parser.Combinator (satisfy, nothing)           
-import Generator.Parser.Parser (Parser (..))                    
+import Lab4.Parser.Combinator (satisfy, nothing)                
+import Lab4.Parser.Parser (Parser (..))                         
 import Control.Lens (makeLenses, (&))                           
                                                                 
 -- parser produced by Sheol Version 1.0.0                       
@@ -167,18 +167,20 @@ parserPROGRAM cur =
                           
 parserBLOCK cur =                     
   do 
-    a1<- parserBLOCKTAIL (cur)                    
-    return (cur & value .~ (BlockTail (Block (a1^.value) (a1^.vars)) (Flag "b-> 1")) )
+    a1<- parserBLOCKTAIL (cur & vars .~  (empty))
+    a2<- parserS (cur)                    
+    return (cur & value .~ (Block (a1^.value) (difference (a1^.vars) (a2^.vars))) )
   <|>
   do 
-    a1<- parserANYEXPR (cur)
+    a1<- parserANYEXPR (cur & vars .~  (empty))
     a2<- token18 (cur)
     a3<- parserBLOCKTAIL (cur & vars .~  (a1^.vars))                    
-    return (cur & value .~ (BlockTail (Block (BlockTail (a1^.value) (a3^.value)) (a3^.vars)) (Flag "b -> 2")) )
+    return (cur & value .~ (Block (BlockTail (a1^.value) (a3^.value)) (difference (a2^.vars) (a3^.vars))) )
   <|>
   do 
-    a1<- parserANYEXPR (cur)                    
-    return (cur & value .~ (BlockTail (Block (Tail (a1^.value)) (a1^.vars)) (Flag "b -> 3")) )                          
+    a1<- parserANYEXPR (cur & vars .~  (empty))
+    a2<- parserS (cur)                    
+    return (cur & value .~ (Block (Tail (a1^.value)) (difference (a1^.vars) (a2^.vars))) )                          
                           
 parserBLOCKTAIL cur =                     
   do 
@@ -198,7 +200,7 @@ parserBLOCKTAIL cur =
   do 
     a1<- parserTAB (cur)
     a2<- parserCONTROL (cur)                    
-    return (cur & value .~ (BlockTail (a2^.value) (Flag "t -> 3")) )
+    return (cur & value .~ (a2^.value) )
   <|>
   do 
     a1<- parserS (cur)
@@ -209,7 +211,7 @@ parserBLOCKTAIL cur =
   do 
     a1<- parserTAB (cur)
     a2<- parserANYEXPR (cur)                    
-    return (cur & value .~ (BlockTail (a2^.value) (Flag "t -> 5")) & vars .~ (a2^.vars))                          
+    return (cur & value .~ (a2^.value) & vars .~ (a2^.vars))                          
                           
 parserE cur =                     
   do 
@@ -295,7 +297,7 @@ parserCONTROL cur =
     a3<- parserS (cur)
     a4<- token9 (cur)
     a5<- parserS (cur)
-    a6<- parserBLOCK (cur & pos %~ (+1) & vars .~ (empty))                    
+    a6<- parserBLOCK (cur & pos %~ (+1))                    
     return (cur & value .~ (While (a2^.value) (a6^.value)) )                          
                           
 parserANYEXPR cur =                     
@@ -312,7 +314,7 @@ parserANYEXPR cur =
     return (cur & value .~ (a1^.value) & vars .~ (a1^.vars) )
   <|>
   do                     
-    return (cur & value .~ (Flag "empty ANYEXPR"))                          
+    return (cur)                          
                           
 parserASSIGN cur =                     
   do 
@@ -329,7 +331,7 @@ parserASSIGN cur =
     a3<- token7 (cur)
     a4<- parserS (cur)
     a5<- parserINT (cur & value .~ a1^.value)                    
-    return (cur & value .~ (BinOp "=" (a1^.value) (a5^.value)) & vars %~ insert (a1^.value) )
+    return (cur & value .~ (a5^.value) & vars %~ insert (a1^.value) )
   <|>
   do 
     a1<- parserE (cur)                    
@@ -378,8 +380,7 @@ parserS cur =
                                                               
                                                                 
 -- | Generated parser                                           
-                                                              
-parser x = (runParser ((^. value) <$> (parserPROGRAM x))) . lexer                       
+parser x = (runParser ((^. value) <$> (parserPROGRAM x))) . lexer                 
                                                                 
 -- | After block                                                
 instance Show DataTree where
@@ -398,7 +399,6 @@ instance Show DataTree where
     show (Input x) = "scanf(\"%d\", &" ++ (show x) ++ ")"
     show (Print x) = "printf(\"%d\"," ++ (show x) ++ ")"
     show (Main x) = "int main() {\n" ++ (show x) ++ "\n\treturn 0; \n \125"
-    show (Flag _) = []
 
 inside :: Token -> DataTree
 inside (TokenNum x) = Const x

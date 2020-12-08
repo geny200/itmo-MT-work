@@ -1,18 +1,18 @@
 {-# LANGUAGE TemplateHaskell #-}                                
 -- | Before block                                               
-module Interpreter.Calculator.Parser
+module Lab3.Calculator.Parser
   ( -- * Function
     calculate
   )
 where
 
-import Interpreter.Calculator.Lexer (lexer, Token(..))
+import Lab3.Calculator.Lexer (lexer, Token(..))
 import Control.Lens ((^.), (.~))
                                                               
                                                                 
 import Control.Applicative ((<|>))                              
-import Generator.Parser.Combinator (satisfy)                    
-import Generator.Parser.Parser (Parser (..))                    
+import Lab4.Parser.Combinator (satisfy, nothing)                
+import Lab4.Parser.Parser (Parser (..))                         
 import Control.Lens (makeLenses, (&))                           
                                                                 
 -- parser produced by Sheol Version 1.0.0                       
@@ -138,8 +138,7 @@ parserS cur =
                                                               
                                                                 
 -- | Generated parser                                           
-                                                              
-parser x = (runParser ((^. value) <$> (parserE x))) . lexer                       
+parser x = (runParser ((^. value) <$> (parserE x))) . lexer                 
                                                                 
 -- | After block                                                
 num :: Token -> Integer

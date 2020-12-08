@@ -1,5 +1,5 @@
 -- | Before block                                               
-module Interpreter.PythonToC.Lexer
+module Lab3.PythonToC.Lexer
   ( -- * Lexer parser
     lexer
 
@@ -14,8 +14,10 @@ import Data.Maybe (fromJust)
 import Data.Set (Set (..), toList)
                                                               
                                                                 
-import Generator.Parser.Combinator (eof, regExp)                
-import Generator.Parser.Parser (Parser (..), (<|>))             
+import Lab4.Parser.Combinator (eof, regExp)                     
+import Lab4.Parser.Parser (Parser (..), (<|>))                  
+                                                                
+-- parser produced by SheolLexer Version 1.0.0                  
                                                                 
 -- | Token parsers                                              
 tokenParse1 = (TokenNum ) <$> regExp "^[0-9]+"

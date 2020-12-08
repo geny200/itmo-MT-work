@@ -1,6 +1,6 @@
 
 {
-module Interpreter.Calculator.Lexer
+module Lab3.Calculator.Lexer
   ( -- * Lexer parser
     lexer
 

@@ -1,11 +1,11 @@
 {
-module Interpreter.Calculator.Parser
+module Lab3.Calculator.Parser
   ( -- * Function
     calculate
   )
 where
 
-import Interpreter.Calculator.Lexer (lexer, Token(..))
+import Lab3.Calculator.Lexer (lexer, Token(..))
 import Control.Lens ((^.), (.~))
 }
 

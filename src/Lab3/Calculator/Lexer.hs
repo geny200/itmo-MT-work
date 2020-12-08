@@ -1,5 +1,5 @@
 -- | Before block                                               
-module Interpreter.Calculator.Lexer
+module Lab3.Calculator.Lexer
   ( -- * Lexer parser
     lexer
 
@@ -10,8 +10,10 @@ where
 import Data.Maybe (fromJust)
                                                               
                                                                 
-import Generator.Parser.Combinator (eof, regExp)                
-import Generator.Parser.Parser (Parser (..), (<|>))             
+import Lab4.Parser.Combinator (eof, regExp)                     
+import Lab4.Parser.Parser (Parser (..), (<|>))                  
+                                                                
+-- parser produced by SheolLexer Version 1.0.0                  
                                                                 
 -- | Token parsers                                              
 tokenParse1 = (TokenNum . read ) <$> regExp "^[0-9]+"

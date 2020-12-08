@@ -1,4 +1,4 @@
-module Generator.Lexer.Lexer
+module Lab4.Lexer.Lexer
   ( -- * Lexer
     lexer,
   )
@@ -7,9 +7,9 @@ where
 import Control.Applicative ((<|>))
 import Control.Category ((>>>))
 import Control.Lens.Operators ((%~), (.~))
-import Generator.Lexer.Template (TMPCommonLexer (..), TMPParserToken (..), doAfter, doBefore, expression, lexerName, readToken, tmpParsers, tokenName)
-import Generator.Parser.Combinator (element, greedily, parseChangFgBr, parseFigureBlock, satisfy, space, spaceStr, stream)
-import Generator.Parser.Parser (Parser (..))
+import Lab4.Lexer.Template (TMPCommonLexer (..), TMPParserToken (..), doAfter, doBefore, expression, lexerName, readToken, tmpParsers, tokenName)
+import Lab4.Parser.Combinator (element, greedily, parseChangFgBr, parseFigureBlock, satisfy, space, spaceStr, stream)
+import Lab4.Parser.Parser (Parser (..))
 
 lexer :: Parser Char TMPCommonLexer
 lexer =

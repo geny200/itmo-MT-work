@@ -2,15 +2,13 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Generator.Sheol.Template where
+module Lab4.Sheol.Template where
 
-import Control.Applicative ((<|>))
-import Control.Lens
+import Control.Lens (each, makeLenses, set, (%~), (&), (.~), (<&>), (^.), (^..), (^?), (^?!), _1, _2, _Just, _head)
 import Data.Char (isSpace)
 import Data.List (elemIndex)
-import Generator.Parser.Parser
-import Utils (genericJoin, join, replace)
 import Text.Printf (printf)
+import Utils (genericJoin, join, replace)
 
 toTmpName :: String -> String
 toTmpName x = "parser" ++ x
@@ -131,8 +129,6 @@ instance Show TMPParserOption where
       (exist (replaceChild (opt ^. condition)))
       (printExpression (opt ^. expression))
 
---(replaceChild (opt ^. expression))
-
 createDefinition :: String -> String -> String -> String
 createDefinition _ _ [] = []
 createDefinition defName tokType retType =
@@ -181,8 +177,8 @@ instance Show TMPCommonParser where
       \%s                                                              \n\
       \                                                                \n\
       \import Control.Applicative ((<|>))                              \n\
-      \import Generator.Parser.Combinator (satisfy, nothing)           \n\
-      \import Generator.Parser.Parser (Parser (..))                    \n\
+      \import Lab4.Parser.Combinator (satisfy, nothing)                \n\
+      \import Lab4.Parser.Parser (Parser (..))                         \n\
       \import Control.Lens (makeLenses, (&))                           \n\
       \                                                                \n\
       \-- parser produced by Sheol Version 1.0.0                       \n\
@@ -197,8 +193,7 @@ instance Show TMPCommonParser where
       \%s                                                              \n\
       \                                                                \n\
       \-- | Generated parser                                           \n\
-      \%s                                                              \n\
-      \%s x = (runParser ((^. value) <$> (%s x))) . %s                       \n\
+      \%s x = (runParser ((^. value) <$> (%s x))) . %s                 \n\
       \                                                                \n\
       \-- | After block                                                \n\
       \%s                                                              \n"
@@ -213,11 +208,6 @@ instance Show TMPCommonParser where
           )
       )
       ((parser ^. tmpParsers & each . options . each . variables . each %~ (find (parser ^. tokens ^.. each . pattern)) & each . tokenType .~ (parser ^. tokenName) & each %~ show) ^. each)
-      ( "" --createDefinition
-      --          (parser ^. parserName)
-      --          (parser ^. tokenName)
-      --          (parser ^. tmpParsers ^? _head ^?! _Just ^. returnType)
-      )
       (parser ^. parserName)
       (toTmpName (parser ^. tmpParsers ^? _head ^?! _Just ^. name))
       (parser ^. lexerName)
@@ -227,32 +217,3 @@ find :: [String] -> TMPContext -> TMPContext
 find token cotex = case (cotex ^. variable) `elemIndex` token of
   Just n -> cotex & variable .~ (toTmpTokenName (n + 1))
   Nothing -> cotex & variable %~ (toTmpName)
-
-type Token = Char
-
-action1 :: TMPAttribute -> TMPAttribute
-action1 x = x & attributeName .~ "new name" & attributeType .~ "new type"
-
--- { $2 :: attrName .~ = ...; attrName = ...;
---   $3 :: ....;
---   $$ :: ....;
---   $$ = .....;
---   where condition
---  }
-test1 :: TMPAttribute -> Parser Token TMPAttribute
-test1 cur =
-  do
-    a1 <- test1 (action1 cur)
-    --condition
-    return a1
-    <|> do
-      a1 <- test1 (action1 cur)
-      --condition
-      return a1
-    <|> errorEndPoint
-
-errorEndPoint :: Parser Token a
-errorEndPoint = Parser sheolError
-
-sheolError :: [Token] -> a
-sheolError _ = error ("Parse error\n")

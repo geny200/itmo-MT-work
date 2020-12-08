@@ -1,6 +1,6 @@
 
 {
-module Interpreter.PythonToC.Lexer
+module Lab3.PythonToC.Lexer
   ( -- * Lexer parser
     lexer
 

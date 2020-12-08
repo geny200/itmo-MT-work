@@ -1,15 +1,15 @@
 {-# LANGUAGE BlockArguments #-}
 
-module Graph
-  ( 
+module Lab2.Graph
+  ( -- * Function for start draw
     evaluateGraph
   )
 where
 
-import Control.Monad.State.Lazy   (State, evalState, get, put)
-import System.Process             (callCommand)
-import Token                      (lexicalAnalyzer)
-import Tree                       (Tree (..), evaluateTree)
+import Control.Monad.State.Lazy (State, evalState, get, put)
+import Lab2.Token (lexicalAnalyzer)
+import Lab2.Tree (Tree (..), evaluateTree)
+import System.Process (callCommand)
 
 evaluateGraph :: String -> IO ()
 evaluateGraph expr =

@@ -4,7 +4,7 @@ module Calculator.Test
   )
 where
 
-import Interpreter.Calculator.Parser (calculate)
+import Lab3.Calculator.Parser (calculate)
 import Test.Hspec (Expectation, SpecWith, describe, it, shouldBe)
 
 -- | Unit tests for the moving average function with a description

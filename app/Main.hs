@@ -1,47 +1,25 @@
 module Main where
 
---import Graph (evaluateGraph)
-import Generator.Parser.Parser (Parser(..))
+import Lab4.Parser.Parser (Parser(..))
 import System.IO (IOMode(..), openFile, hGetContents, hClose)
 import Data.Maybe (fromJust)
-import Interpreter.Calculator.Parser (calculate)
+import Lab3.Calculator.Parser (calculate)
 import Utils (join)
-import Generator.Sheol.Generate (parseTmp)
-import Generator.Lexer.Lexer (lexer)
-import Interpreter.PythonToC.Parser (interpret)
-import Interpreter.PythonToC.Lexer (lexer)
+import Lab4.Sheol.Generate (parseTmp)
+import qualified Lab4.Lexer.Lexer as LexGen (lexer)
+import Lab3.PythonToC.Parser (interpret)
+import qualified Lab3.PythonToC.Lexer as Interpreter (lexer)
 
-testCodeLine :: String
-testCodeLine = "SND TRH { $1 :: pos .~ 0; value .~ 0;; $$ :: pos .~ ($2 ^. pos);; $2 :: pos .~ ($1 ^~ pos);;  }"
-myTest :: String
-myTest =
-  "%name pareser                  \n\
-  \%lexername lexer               \n\
-  \%attributetype { MyData a }    \n\
-  \%attribute pos { Int }         \n\
-  \%attribute value { String }    \n\
-  \%%                             \n\
-  \FST : | '+' '-' { $1 :: pos .~ 0; value .~ 0;; $$ :: pos .~ ($2 ^. pos);; $2 :: pos .~ ($1 ^~ pos);;  }\n\
-  \ | '+'                         \n\
-  \%token '+' { Plus }            \n\
-  \       '-' { Minus }           \n\
-  \                               \n\
-  \                               \n\
-  \                               \n\
-  \                               \n\
-  \                               \n\
-  \                               \n\
-  \                               \n\
-  \"
-
-runFile :: (Show a) => String -> String -> Parser Char a -> IO ()
-runFile fromFile toFile pars =
-    do 
-      handle <- openFile fromFile ReadMode
-      everything <- hGetContents handle
-      writeFile toFile (show . fst . fromJust $ runParser pars everything)
-      hClose handle
-      
+main :: IO ()
+main =
+  do 
+    generic "PyToC" "resources/PythonToC" "src/Lab3/PythonToC/"
+    generic "Calc" "resources/Calculator" "src/Lab3/Calculator/"
+    runFromFile "test_py.in" "test_py.lex" (fmap show . Just . Interpreter.lexer)
+    runFromFile "test_py.in" "test_py.check" Just
+    runFromFile "test_calc.in" "test_calc.out" (fmap show . calculate)
+    runFromFile "test_py.in" "test_py.out" interpret
+    
 runFromFile :: String -> String -> (String -> Maybe String) -> IO ()
 runFromFile fromFile toFile action =
     do
@@ -49,23 +27,20 @@ runFromFile fromFile toFile action =
       everything <- hGetContents handle
       writeFile toFile (fromJust . action $ everything)
       hClose handle
-      
+    
 generic :: String -> String -> String -> IO ()
 generic name from to =
   do 
     runFile (join "/" [from, name ++ ".ly"]) (join "/" [to, "Parser.hs"]) parseTmp
-    runFile (join "/" [from, name ++ ".lex"]) (join "/" [to, "Lexer.hs"]) Generator.Lexer.Lexer.lexer 
-
-main :: IO ()
-main =
-  do 
-    generic "PyToC" "resources/PythonToC" "src/Interpreter/PythonToC/"
-    --generic "Calc" "resources/Calculator" "src/Interpreter/Calculator/"
-    runFromFile "test_calc.in" "test_calc.out" (fmap show . calculate)
-    runFromFile "test_py.in" "test_py.lex" (fmap show . Just . Interpreter.PythonToC.Lexer.lexer)
-    runFromFile "test_py.in" "test_py.check" Just
-    runFromFile "test_py.in" "test_py.out" interpret
-
+    runFile (join "/" [from, name ++ ".lex"]) (join "/" [to, "Lexer.hs"]) LexGen.lexer 
+    
+runFile :: (Show a) => String -> String -> Parser Char a -> IO ()
+runFile fromFile toFile pars =
+    do 
+      handle <- openFile fromFile ReadMode
+      everything <- hGetContents handle
+      writeFile toFile (show . fst . fromJust $ runParser pars everything)
+      hClose handle
 
 --print (interpret "2+2*2;")
 --generic "PyToC" "resources/PythonToC" "src/Interpreter/PythonToC/"

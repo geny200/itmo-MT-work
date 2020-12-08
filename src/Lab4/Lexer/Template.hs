@@ -2,7 +2,7 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Generator.Lexer.Template where
+module Lab4.Lexer.Template where
 
 --  (
 --    TMPCommonLexer(..),
@@ -45,14 +45,16 @@ instance Show TMPParserToken where
 
 instance Show TMPCommonLexer where
   show :: TMPCommonLexer -> String
-  show lexer =
+  show lexer = 
     printf
       "\
       \-- | Before block                                               \n\
       \%s                                                              \n\
       \                                                                \n\
-      \import Generator.Parser.Combinator (eof, regExp)                \n\
-      \import Generator.Parser.Parser (Parser (..), (<|>))             \n\
+      \import Lab4.Parser.Combinator (eof, regExp)                     \n\
+      \import Lab4.Parser.Parser (Parser (..), (<|>))                  \n\
+      \                                                                \n\
+      \-- parser produced by SheolLexer Version 1.0.0                  \n\
       \                                                                \n\
       \-- | Token parsers                                              \n\
       \%s                                                              \n\
