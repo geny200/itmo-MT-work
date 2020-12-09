@@ -26,6 +26,7 @@ import Data.Set (Set (..), toList)
 \\*                 { const TokenMul }
 \\.                 { const TokenDot }
 /                   { const TokenDiv }
+%                   { const TokenMod }
 \\(                 { const TokenOB }
 \\)                 { const TokenCB }
 =                   { const TokenEq }
@@ -49,6 +50,7 @@ data Token
  | TokenMul
  | TokenDiv
  | TokenEq
+ | TokenMod
  | TokenOB
  | TokenCB
  | TokenInt
@@ -78,7 +80,7 @@ data DataTree
  | BlockTail DataTree DataTree
  | Tail DataTree
  | Main DataTree
- | Flag String
+ | Expr DataTree
  | Nop
  deriving (Eq, Ord)
 
