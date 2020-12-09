@@ -17,7 +17,7 @@ import Control.Lens (makeLenses, (&))
                                                                 
 -- parser produced by Sheol Version 1.0.0                       
 data MyData  = SheolAttributes 
-  { _value :: Integer                     
+  { _value :: Double                     
   }                       
                           
 makeLenses ''MyData           
@@ -80,32 +80,54 @@ errorEndPoint = Parser sheolError
 parserE cur =                     
   do 
     a1<- parserT (cur)
-    a2<- token1 (cur)
-    a3<- parserE (cur)                    
-    return (cur & value .~ (a1^.value + a3^.value) )
+    a2<- parserET (cur)                    
+    return (cur & value .~ (a1^.value + a2^.value) )                          
+                          
+parserET cur =                     
+  do 
+    a1<- token1 (cur)
+    a2<- parserT (cur)
+    a3<- parserET (cur)                    
+    return (cur & value .~ (a2^.value + a3^.value) )
   <|>
   do 
-    a1<- parserT (cur)
-    a2<- token2 (cur)
-    a3<- parserE (cur)                    
-    return (cur & value .~ (a1^.value + a3^.value) )
+    a1<- token2 (cur)
+    a2<- parserT (cur)
+    a3<- parserET (cur)                    
+    return (cur & value .~ (-a2^.value + a3^.value) )
   <|>
-  do 
-    a1<- parserT (cur)                    
-    return (cur & value .~ (a1^.value) )                          
+  do                     
+    return (cur)                          
                           
 parserT cur =                     
   do 
-    a1<- parserF (cur)
-    a2<- token3 (cur)
-    a3<- parserT (cur)                    
-    return (cur & value .~ (a1^.value * a3^.value) )
+    a1<- parserP (cur)
+    a2<- parserTP (cur)                    
+    return (cur & value .~ (a1^.value * a2^.value) )                          
+                          
+parserTP cur =                     
+  do 
+    a1<- token3 (cur)
+    a2<- parserP (cur)
+    a3<- parserTP (cur)                    
+    return (cur & value .~ (a2^.value * a3^.value) )
   <|>
   do 
+    a1<- token4 (cur)
+    a2<- parserP (cur)
+    a3<- parserTP (cur)                    
+    return (cur & value .~ ((del (a2^.value)) * a3^.value) )
+  <|>
+  do                     
+    return (cur & value .~ 1 )                          
+                          
+parserP cur =                     
+  do 
     a1<- parserF (cur)
-    a2<- token4 (cur)
-    a3<- parserT (cur)                    
-    return (cur & value .~ (a1^.value `div` a3^.value) )
+    a2<- token3 (cur)
+    a3<- token3 (cur)
+    a4<- parserP (cur)                    
+    return (cur & value .~ ((a1^.value) ** (a4^.value)) )
   <|>
   do 
     a1<- parserF (cur)                    
@@ -141,11 +163,14 @@ parserS cur =
 parser x = (runParser ((^. value) <$> (parserE x))) . lexer                 
                                                                 
 -- | After block                                                
-num :: Token -> Integer
+num :: Token -> Double
 num (TokenNum x) = x
 
-calculate :: String ->Maybe Integer
-calculate str = fst <$> (parser (SheolAttributes 0) str)
+calculate :: String -> Maybe Double
+calculate str = fst <$> (parser (SheolAttributes (0 :: Double)) str)
+
+del :: Double -> Double
+del x = 1 / x
 
 sheolError :: [Token] -> a
 sheolError _ = error ("Parse error\n")

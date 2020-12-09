@@ -50,7 +50,7 @@ data Token
  | TokenOB
  | TokenCB
  | TokenSP
- | TokenNum Integer
+ | TokenNum Double
  deriving (Show, Eq)
 
 lexer :: String -> [Token]
