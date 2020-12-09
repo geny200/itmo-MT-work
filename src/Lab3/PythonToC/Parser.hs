@@ -173,18 +173,18 @@ parserPROGRAM cur =
                           
 parserBLOCK cur =                     
   do 
-    a1<- parserBLOCKTAIL (cur & vars .~  empty)
+    a1<- parserBLOCKTAIL (cur)
     a2<- parserS (cur)                    
     return (cur & value .~ Block (a1^.value) (difference (a1^.vars) (a2^.vars)) )
   <|>
   do 
-    a1<- parserANYEXPR (cur & vars .~  empty)
+    a1<- parserANYEXPR (cur)
     a2<- token19 (cur)
     a3<- parserBLOCKTAIL (cur & vars .~  (a1^.vars))                    
-    return (cur & value .~ Block (BlockTail (a1^.value) (a3^.value)) (difference (a2^.vars) (a3^.vars)) )
+    return (cur & value .~ Block (BlockTail (a1^.value) (a3^.value)) (difference (a3^.vars) (a2^.vars)) )
   <|>
   do 
-    a1<- parserANYEXPR (cur & vars .~  empty)
+    a1<- parserANYEXPR (cur)
     a2<- parserS (cur)                    
     return (cur & value .~ Block (a1^.value) (difference (a1^.vars) (a2^.vars)) )                          
                           
@@ -310,7 +310,31 @@ parserCONTROL cur =
     a4<- token10 (cur)
     a5<- parserS (cur)
     a6<- parserBLOCK (cur & pos %~ (+1))                    
-    return (cur & value .~ While (a2^.value) (a6^.value) )                          
+    return (cur & value .~ While (a2^.value) (a6^.value) )
+  <|>
+  do 
+    a1<- token15 (cur)
+    a2<- parserE (cur)
+    a3<- parserS (cur)
+    a4<- token10 (cur)
+    a5<- parserS (cur)
+    a6<- parserBLOCK (cur & pos %~ (+1))
+    a7<- parserELSE (cur)                    
+    return (cur & value .~ If (a2^.value) (a6^.value) (a7^.value) )                          
+                          
+parserELSE cur =                     
+  do 
+    a1<- token19 (cur)
+    a2<- parserTAB (cur)
+    a3<- token16 (cur)
+    a4<- parserS (cur)
+    a5<- token10 (cur)
+    a6<- parserS (cur)
+    a7<- parserBLOCK (cur & pos %~ (+1))                    
+    return (cur & value .~ (a7^.value) )
+  <|>
+  do                     
+    return (cur)                          
                           
 parserANYEXPR cur =                     
   do 
@@ -407,6 +431,17 @@ instance Show DataTree where
         "while (" ++ (show x) ++ ") {\n\t"
         ++ (replace "\n" (const "\n\t") (show y))
         ++ "\n\125"
+    show (If x y z) =
+        "if (" ++ (show x) ++ ") {\n\t"
+        ++ (replace "\n" (const "\n\t") (show y))
+        ++ "\n\125" ++
+        (   if (not . null . show $ z)
+            then (
+            " else {\n\t"
+            ++ (replace "\n" (const "\n\t") (show z))
+            ++ "\n\125"
+            )
+            else "")
     show (BlockTail x y) = join "\n" [show x, show y]
     show (Block x var) =
         (if not . null $ var

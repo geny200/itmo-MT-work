@@ -55,6 +55,7 @@ data Token
  | TokenCB
  | TokenInt
  | TokenWhile
+ | TokenElif
  | TokenIf
  | TokenElse
  | TokenPrint
@@ -71,6 +72,7 @@ data Token
 
 data DataTree
  = While DataTree DataTree
+ | If DataTree DataTree DataTree
  | BinOp String DataTree DataTree
  | Const String
  | Bracket DataTree

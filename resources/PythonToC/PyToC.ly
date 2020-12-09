@@ -49,13 +49,10 @@ PROGRAM :
     BLOCK                       { $$ :: value .~ (Main ($1^.value)) }
 
 BLOCK :
-      BLOCKTAIL S               { $1 :: vars .~  empty;;
-                                  $$ :: value .~ Block ($1^.value) (difference ($1^.vars) ($2^.vars)) }
-    | ANYEXPR endl BLOCKTAIL    { $1 :: vars .~  empty;;
-                                  $3 :: vars .~  ($1^.vars);;
-                                  $$ :: value .~ Block (BlockTail ($1^.value) ($3^.value)) (difference ($2^.vars) ($3^.vars)) }
-    | ANYEXPR S                 { $1 :: vars .~  empty;;
-                                  $$ :: value .~ Block ($1^.value) (difference ($1^.vars) ($2^.vars)) }
+      BLOCKTAIL S               { $$ :: value .~ Block ($1^.value) (difference ($1^.vars) ($2^.vars)) }
+    | ANYEXPR endl BLOCKTAIL    { $3 :: vars .~  ($1^.vars);;
+                                  $$ :: value .~ Block (BlockTail ($1^.value) ($3^.value)) (difference ($3^.vars) ($2^.vars)) }
+    | ANYEXPR S                 { $$ :: value .~ Block ($1^.value) (difference ($1^.vars) ($2^.vars)) }
 
 BLOCKTAIL :
       TAB ANYEXPR endl BLOCKTAIL{ $4 :: vars .~ ($2^.vars);;
@@ -91,6 +88,14 @@ NUM :
 CONTROL :
       while E S ':' S BLOCK     { $6 :: pos %~ (+1);;
                                   $$ :: value .~ While ($2^.value) ($6^.value) }
+    | if E S ':' S BLOCK ELSE   { $6 :: pos %~ (+1);;
+                                  $$ :: value .~ If ($2^.value) ($6^.value) ($7^.value) }
+
+ELSE :
+      endl TAB else S ':' S BLOCK
+                                { $7 :: pos %~ (+1);;
+                                  $$ :: value .~ ($7^.value) }
+    |                           { }
 
 ANYEXPR :
       ASSIGN S SCol S ANYEXPR   { $5 :: vars .~ ($1^.vars);;
@@ -129,6 +134,17 @@ instance Show DataTree where
         "while (" ++ (show x) ++ ") {\n\t"
         ++ (replace "\n" (const "\n\t") (show y))
         ++ "\n\125"
+    show (If x y z) =
+        "if (" ++ (show x) ++ ") {\n\t"
+        ++ (replace "\n" (const "\n\t") (show y))
+        ++ "\n\125" ++
+        (   if (not . null . show $ z)
+            then (
+            " else {\n\t"
+            ++ (replace "\n" (const "\n\t") (show z))
+            ++ "\n\125"
+            )
+            else "")
     show (BlockTail x y) = join "\n" [show x, show y]
     show (Block x var) =
         (if not . null $ var
