@@ -1,8 +1,10 @@
-module Common
+module Lab2.Common
   ( -- * Functions
     myTest
-  ) where
-import Test.HUnit
+  ) 
+where
+
+import Test.HUnit (Test (..), assertEqual)
 
 -- | Asserts that the specified actual value is equal to the expected value.
 -- The output message will contain the prefix, the expected value, and the

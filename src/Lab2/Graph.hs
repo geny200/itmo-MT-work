@@ -11,13 +11,24 @@ import Lab2.Token (lexicalAnalyzer)
 import Lab2.Tree (Tree (..), evaluateTree)
 import System.Process (callCommand)
 
-evaluateGraph :: String -> IO ()
+-- | Renders the tree structure of the parser.
+-- Also creates a representation of the graph 
+-- in the tree.gv file as temporary files, 
+-- and saves the image in the file tree.jpg 
+-- (in the root of the project)
+evaluateGraph 
+  :: String       -- ^ String for parsing by the parser
+  -> IO ()
 evaluateGraph expr =
   do
     let tree = lexicalAnalyzer expr >>= evaluateTree
     createFileGraph tree
     callCommand "dot -Tjpg tree.gv -o tree.jpg"
     callCommand "tree.jpg"
+    
+--------------------------------------------
+----         Auxiliary functions         ---
+--------------------------------------------
 
 createFileGraph :: Either String (Maybe Tree) -> IO ()
 createFileGraph (Right tree) =
@@ -27,7 +38,7 @@ createFileGraph (Right tree) =
 createFileGraph (Left str) =
   do
     putStrLn str
-    fail "parse error"
+    error "parse error"
 
 toGraph :: Maybe Tree -> State Integer String
 toGraph Nothing = return []

@@ -8,7 +8,6 @@ copyright:           "2020 Geny200"
 
 extra-source-files:
 - README.md
-- ChangeLog.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -55,6 +54,5 @@ tests:
     dependencies:
     - MT-2lab-recursive-parsing
     - HUnit
-    - split
     - QuickCheck
     - hspec

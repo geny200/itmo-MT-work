@@ -2,16 +2,23 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Lab4.Lexer.Template where
+module Lab4.Lexer.Template
+  ( 
+    TMPCommonLexer (..),
+    TMPParserToken (..),
+    doAfter,
+    doBefore,
+    expression,
+    lexerName,
+    readToken,
+    tmpParsers,
+    tokenName,
+  )
+where
 
---  (
---    TMPCommonLexer(..),
---    TMPParserToken(..)
---  )
-
-import Control.Lens
-import Utils (join)
+import Control.Lens (each, makeLenses, (%~), (<&>), (^.), _1, _2)
 import Text.Printf (printf)
+import Utils (join)
 
 toTmpName :: Integer -> String
 toTmpName x = "tokenParse" ++ show x
@@ -45,7 +52,7 @@ instance Show TMPParserToken where
 
 instance Show TMPCommonLexer where
   show :: TMPCommonLexer -> String
-  show lexer = 
+  show lexer =
     printf
       "\
       \-- | Before block                                               \n\
@@ -91,11 +98,3 @@ instance Show TMPCommonLexer where
       (lexer ^. lexerName)
       (lexer ^. lexerName)
       (lexer ^. doAfter)
-
---commonLexer :: Parser Char T
---commonLexer = name <|> name ...
---
---nameLexer :: Parser Char [T]
---nameLexer =
---  ((:) <$> commonLexer <*> nameLexer)
---    <|> (eof >> pure [])

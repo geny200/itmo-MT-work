@@ -2,9 +2,42 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Lab4.Sheol.Template where
+module Lab4.Sheol.Template
+  ( 
+    TMPAttribute (..)
+  , TMPCommonParser (..)
+  ,  TMPContext (..)
+  , TMPDataAttribute (..)
+  , TMPParser (..)
+  , TMPParserOption (..)
+  , TMPToken (..)
+  , attribute
+  , attributes
+  , condition
+  , context
+  , definition
+  , doAfter
+  , doBefore
+  , expression
+  , lexerName
+  , options
+  , parserName
+  , pattern
+  , returnExpr
+  , returnType
+  , tmpParsers
+  , tokenExpr
+  , tokenName
+  , tokens
+  , variables
+  )
+where
 
-import Control.Lens (each, makeLenses, set, (%~), (&), (.~), (<&>), (^.), (^..), (^?), (^?!), _1, _2, _Just, _head)
+import Control.Lens
+  ( each, makeLenses, set,
+    (%~), (&), (.~), (<&>), (^.), (^..),(^?), (^?!), 
+    _1, _2, _Just, _head,
+  )
 import Data.Char (isSpace)
 import Data.List (elemIndex)
 import Text.Printf (printf)
@@ -207,7 +240,17 @@ instance Show TMPCommonParser where
               <&> (^. each)
           )
       )
-      ((parser ^. tmpParsers & each . options . each . variables . each %~ (find (parser ^. tokens ^.. each . pattern)) & each . tokenType .~ (parser ^. tokenName) & each %~ show) ^. each)
+      ( ( parser ^. tmpParsers
+            & each . options . each . variables
+              . each
+            %~ (find (parser ^. tokens ^.. each . pattern))
+            & each . tokenType
+            .~ (parser ^. tokenName)
+            & each
+            %~ show
+        )
+          ^. each
+      )
       (parser ^. parserName)
       (toTmpName (parser ^. tmpParsers ^? _head ^?! _Just ^. name))
       (parser ^. lexerName)

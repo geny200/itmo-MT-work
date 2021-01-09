@@ -1,14 +1,23 @@
-module TestTree
+module Lab2.TestTree
   ( -- * Functions
     baseTests
   )
 where
 
-import Common
-import Test.HUnit
-import Lab2.Token
-import Lab2.Tree
 import Data.Either (fromRight)
+import Lab2.Common (myTest)
+import Lab2.Token (Token (..), lexicalAnalyzer)
+import Lab2.Tree (Tree (..), evaluateTree)
+import Test.HUnit (Test (..))
+
+baseTests :: Test
+baseTests
+  = TestList [
+      TestLabel "test-simple-or-xor-and" testsSimpleAndOrXor,
+      TestLabel "test-simple-not"        testsSimpleNot,
+      TestLabel "test-level-operation"   testsLevel,
+      TestLabel "test-brackets"          testsBrackets
+    ]
 
 testsSimpleAndOrXor :: Test
 testsSimpleAndOrXor =
@@ -92,13 +101,4 @@ testsBrackets =
         Node [Leaf Var,Leaf Xor,Leaf Var],Leaf BrClose]],
         Leaf And,Leaf Var])))
         (evaluateTree (fromRight [] (lexicalAnalyzer "a and (b xor c) and d")))
-    ]
-
-baseTests :: Test
-baseTests
-  = TestList [
-      TestLabel "test-simple-or-xor-and" testsSimpleAndOrXor,
-      TestLabel "test-simple-not"        testsSimpleNot,
-      TestLabel "test-level-operation"   testsLevel,
-      TestLabel "test-brackets"          testsBrackets
     ]
