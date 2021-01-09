@@ -1,6 +1,6 @@
-name:                MT-2lab-recursive-parsing
+name:                itmo-MT-work
 version:             0.1.0.0
-github:              "Geny200/MT-2lab-recursive-parsing"
+github:              "Geny200/itmo-MT-work"
 license:             LGPL-3
 author:              "Geny200"
 maintainer:          "-"
@@ -16,7 +16,7 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/Geny200/MT-2lab-recursive-parsing#readme>
+description:         Please see the README on GitHub at <https://github.com/Geny200/itmo-MT-work#readme>
 
 dependencies:
 - base >= 4.7 && < 5
