@@ -25,3 +25,4 @@ cabal.project.local~
 /out
 stack.yaml.lock
 
+/itmo-MT-work.cabal
