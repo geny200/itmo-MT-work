@@ -33,7 +33,7 @@ library:
   source-dirs: src
 
 executables:
-  MT-2lab-recursive-parsing-exe:
+  itmo-MT-work-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -41,10 +41,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - MT-2lab-recursive-parsing
+    - itmo-MT-work
 
 tests:
-  MT-2lab-recursive-parsing-test:
+  itmo-MT-work-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -52,7 +52,7 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - MT-2lab-recursive-parsing
+    - itmo-MT-work
     - HUnit
     - QuickCheck
     - hspec
